@@ -254,7 +254,7 @@ definitions:
       tags:
         type: array
         items:
-          $ref: '#/definitions/ResourceTagResponseBody'
+          $ref: '#/definitions/TagResponseBody'
         description: Tags associated with the category
         example:
         - id: 1
@@ -375,7 +375,7 @@ definitions:
       tags:
         type: array
         items:
-          $ref: '#/definitions/ResourceTagResponse'
+          $ref: '#/definitions/TagResponse'
         description: Tags associated to the resource
         example:
         - id: 1
@@ -429,44 +429,6 @@ definitions:
     - tags
     - rating
     - last_updated_at
-  ResourceTagResponse:
-    title: ResourceTagResponse
-    type: object
-    properties:
-      id:
-        type: integer
-        description: ID is the unique id of the tag
-        example: 1
-        format: int64
-      name:
-        type: string
-        description: Name of the tag
-        example: notification
-    example:
-      id: 1
-      name: notification
-    required:
-    - id
-    - name
-  ResourceTagResponseBody:
-    title: ResourceTagResponseBody
-    type: object
-    properties:
-      id:
-        type: integer
-        description: ID is the unique id of the tag
-        example: 1
-        format: int64
-      name:
-        type: string
-        description: Name of the tag
-        example: notification
-    example:
-      id: 1
-      name: notification
-    required:
-    - id
-    - name
   ResourceUpdateRatingRequestBody:
     title: ResourceUpdateRatingRequestBody
     type: object
@@ -499,3 +461,41 @@ definitions:
     required:
     - id
     - version
+  TagResponse:
+    title: TagResponse
+    type: object
+    properties:
+      id:
+        type: integer
+        description: ID is the unique id of the tag
+        example: 1
+        format: int64
+      name:
+        type: string
+        description: Name of the tag
+        example: notification
+    example:
+      id: 1
+      name: notification
+    required:
+    - id
+    - name
+  TagResponseBody:
+    title: TagResponseBody
+    type: object
+    properties:
+      id:
+        type: integer
+        description: ID is the unique id of the tag
+        example: 1
+        format: int64
+      name:
+        type: string
+        description: Name of the tag
+        example: notification
+    example:
+      id: 1
+      name: notification
+    required:
+    - id
+    - name

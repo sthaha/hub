@@ -38,19 +38,19 @@ func marshalCategoryCategoryToCategoryResponseBody(v *category.Category) *Catego
 		Name: v.Name,
 	}
 	if v.Tags != nil {
-		res.Tags = make([]*ResourceTagResponseBody, len(v.Tags))
+		res.Tags = make([]*Tag, len(v.Tags))
 		for i, val := range v.Tags {
-			res.Tags[i] = marshalCategoryResourceTagToResourceTagResponseBody(val)
+			res.Tags[i] = marshalCategoryTagToTag(val)
 		}
 	}
 
 	return res
 }
 
-// marshalCategoryResourceTagToResourceTagResponseBody builds a value of type
-// *ResourceTagResponseBody from a value of type *category.ResourceTag.
-func marshalCategoryResourceTagToResourceTagResponseBody(v *category.ResourceTag) *ResourceTagResponseBody {
-	res := &ResourceTagResponseBody{
+// marshalCategoryTagToTag builds a value of type *Tag from a value of type
+// *category.Tag.
+func marshalCategoryTagToTag(v *category.Tag) *Tag {
+	res := &Tag{
 		ID:   v.ID,
 		Name: v.Name,
 	}

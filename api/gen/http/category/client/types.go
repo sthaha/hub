@@ -26,11 +26,11 @@ type CategoryResponseBody struct {
 	// Name of the Category
 	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
 	// Tags associated with the category
-	Tags []*ResourceTagResponseBody `form:"tags,omitempty" json:"tags,omitempty" xml:"tags,omitempty"`
+	Tags []*Tag `form:"tags,omitempty" json:"tags,omitempty" xml:"tags,omitempty"`
 }
 
-// ResourceTagResponseBody is used to define fields on response body types.
-type ResourceTagResponseBody struct {
+// Tag is used to define fields on response body types.
+type Tag struct {
 	// ID is the unique id of the tag
 	ID *uint `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
 	// Name of the tag
@@ -84,7 +84,7 @@ func ValidateCategoryResponseBody(body *CategoryResponseBody) (err error) {
 	}
 	for _, e := range body.Tags {
 		if e != nil {
-			if err2 := ValidateResourceTagResponseBody(e); err2 != nil {
+			if err2 := ValidateTag(e); err2 != nil {
 				err = goa.MergeErrors(err, err2)
 			}
 		}
@@ -92,9 +92,8 @@ func ValidateCategoryResponseBody(body *CategoryResponseBody) (err error) {
 	return
 }
 
-// ValidateResourceTagResponseBody runs the validations defined on
-// ResourceTagResponseBody
-func ValidateResourceTagResponseBody(body *ResourceTagResponseBody) (err error) {
+// ValidateTag runs the validations defined on Tag
+func ValidateTag(body *Tag) (err error) {
 	if body.ID == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
 	}

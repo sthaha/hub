@@ -83,18 +83,18 @@ func unmarshalCategoryResponseBodyToCategoryCategory(v *CategoryResponseBody) *c
 		ID:   *v.ID,
 		Name: *v.Name,
 	}
-	res.Tags = make([]*category.ResourceTag, len(v.Tags))
+	res.Tags = make([]*category.Tag, len(v.Tags))
 	for i, val := range v.Tags {
-		res.Tags[i] = unmarshalResourceTagResponseBodyToCategoryResourceTag(val)
+		res.Tags[i] = unmarshalTagToCategoryTag(val)
 	}
 
 	return res
 }
 
-// unmarshalResourceTagResponseBodyToCategoryResourceTag builds a value of type
-// *category.ResourceTag from a value of type *ResourceTagResponseBody.
-func unmarshalResourceTagResponseBodyToCategoryResourceTag(v *ResourceTagResponseBody) *category.ResourceTag {
-	res := &category.ResourceTag{
+// unmarshalTagToCategoryTag builds a value of type *category.Tag from a value
+// of type *Tag.
+func unmarshalTagToCategoryTag(v *Tag) *category.Tag {
+	res := &category.Tag{
 		ID:   *v.ID,
 		Name: *v.Name,
 	}

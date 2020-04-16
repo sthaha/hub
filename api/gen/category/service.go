@@ -40,10 +40,10 @@ type Category struct {
 	// Name of the Category
 	Name string
 	// Tags associated with the category
-	Tags []*ResourceTag
+	Tags []*Tag
 }
 
-type ResourceTag struct {
+type Tag struct {
 	// ID is the unique id of the tag
 	ID uint
 	// Name of the tag

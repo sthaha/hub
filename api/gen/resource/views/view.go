@@ -38,7 +38,7 @@ type ResourceView struct {
 	// Different Versions of the resource
 	Versions []*ResourceVersionView
 	// Tags associated to the resource
-	Tags []*ResourceTagView
+	Tags []*Tag
 	// Rating of resource
 	Rating *float64
 	// TimeStamp the resource last updated at
@@ -61,8 +61,8 @@ type ResourceVersionView struct {
 	Version *string
 }
 
-// ResourceTagView is a type that runs validations on a projected type.
-type ResourceTagView struct {
+// Tag is a type that runs validations on a projected type.
+type Tag struct {
 	// ID is the unique id of the tag
 	ID *uint
 	// Name of the tag
@@ -169,7 +169,7 @@ func ValidateResourceView(result *ResourceView) (err error) {
 	}
 	for _, e := range result.Tags {
 		if e != nil {
-			if err2 := ValidateResourceTagView(e); err2 != nil {
+			if err2 := ValidateTag(e); err2 != nil {
 				err = goa.MergeErrors(err, err2)
 			}
 		}
@@ -210,8 +210,8 @@ func ValidateResourceVersionView(result *ResourceVersionView) (err error) {
 	return
 }
 
-// ValidateResourceTagView runs the validations defined on ResourceTagView.
-func ValidateResourceTagView(result *ResourceTagView) (err error) {
+// ValidateTag runs the validations defined on Tag.
+func ValidateTag(result *Tag) (err error) {
 	if result.ID == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("id", "result"))
 	}

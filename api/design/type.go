@@ -55,6 +55,7 @@ var ResourceVersion = Type("ResourceVersion", func() {
 })
 
 var ResourceTag = Type("ResourceTag", func() {
+	TypeName("Tag")
 	Attribute("id", UInt, "ID is the unique id of the tag", func() {
 		Example("id", 1)
 	})
@@ -81,7 +82,7 @@ var Category = Type("Category", func() {
 		Example("name", "Notification")
 	})
 	Attribute("tags", ArrayOf(ResourceTag), "Tags associated with the category")
-	Required("id","name","tags")
+	Required("id", "name", "tags")
 })
 
 var ResourceVersionDetail = Type("ResourceVersionDetails", func() {
@@ -95,5 +96,5 @@ var ResourceVersionDetail = Type("ResourceVersionDetails", func() {
 	Attribute("url", String, "Url of the resource's version", func() {
 		Example("url", "https://github.com/tektoncd/catalog/tasks/buildah/1.0")
 	})
-	Required("version","description","url")
+	Required("version", "description", "url")
 })

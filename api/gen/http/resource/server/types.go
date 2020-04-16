@@ -50,7 +50,7 @@ type ResourceResponse struct {
 	// Different Versions of the resource
 	Versions []*ResourceVersionResponse `form:"versions" json:"versions" xml:"versions"`
 	// Tags associated to the resource
-	Tags []*ResourceTagResponse `form:"tags" json:"tags" xml:"tags"`
+	Tags []*Tag `form:"tags" json:"tags" xml:"tags"`
 	// Rating of resource
 	Rating float64 `form:"rating" json:"rating" xml:"rating"`
 	// TimeStamp the resource last updated at
@@ -73,8 +73,8 @@ type ResourceVersionResponse struct {
 	Version string `form:"version" json:"version" xml:"version"`
 }
 
-// ResourceTagResponse is used to define fields on response body types.
-type ResourceTagResponse struct {
+// Tag is used to define fields on response body types.
+type Tag struct {
 	// ID is the unique id of the tag
 	ID uint `form:"id" json:"id" xml:"id"`
 	// Name of the tag

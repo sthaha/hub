@@ -25,11 +25,11 @@ type CategoryResponseBody struct {
 	// Name of the Category
 	Name string `form:"name" json:"name" xml:"name"`
 	// Tags associated with the category
-	Tags []*ResourceTagResponseBody `form:"tags" json:"tags" xml:"tags"`
+	Tags []*Tag `form:"tags" json:"tags" xml:"tags"`
 }
 
-// ResourceTagResponseBody is used to define fields on response body types.
-type ResourceTagResponseBody struct {
+// Tag is used to define fields on response body types.
+type Tag struct {
 	// ID is the unique id of the tag
 	ID uint `form:"id" json:"id" xml:"id"`
 	// Name of the tag

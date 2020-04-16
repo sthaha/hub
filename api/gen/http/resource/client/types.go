@@ -50,7 +50,7 @@ type ResourceResponse struct {
 	// Different Versions of the resource
 	Versions []*ResourceVersionResponse `form:"versions,omitempty" json:"versions,omitempty" xml:"versions,omitempty"`
 	// Tags associated to the resource
-	Tags []*ResourceTagResponse `form:"tags,omitempty" json:"tags,omitempty" xml:"tags,omitempty"`
+	Tags []*Tag `form:"tags,omitempty" json:"tags,omitempty" xml:"tags,omitempty"`
 	// Rating of resource
 	Rating *float64 `form:"rating,omitempty" json:"rating,omitempty" xml:"rating,omitempty"`
 	// TimeStamp the resource last updated at
@@ -73,8 +73,8 @@ type ResourceVersionResponse struct {
 	Version *string `form:"version,omitempty" json:"version,omitempty" xml:"version,omitempty"`
 }
 
-// ResourceTagResponse is used to define fields on response body types.
-type ResourceTagResponse struct {
+// Tag is used to define fields on response body types.
+type Tag struct {
 	// ID is the unique id of the tag
 	ID *uint `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
 	// Name of the tag
@@ -182,7 +182,7 @@ func ValidateResourceResponse(body *ResourceResponse) (err error) {
 	}
 	for _, e := range body.Tags {
 		if e != nil {
-			if err2 := ValidateResourceTagResponse(e); err2 != nil {
+			if err2 := ValidateTag(e); err2 != nil {
 				err = goa.MergeErrors(err, err2)
 			}
 		}
@@ -223,9 +223,8 @@ func ValidateResourceVersionResponse(body *ResourceVersionResponse) (err error) 
 	return
 }
 
-// ValidateResourceTagResponse runs the validations defined on
-// ResourceTagResponse
-func ValidateResourceTagResponse(body *ResourceTagResponse) (err error) {
+// ValidateTag runs the validations defined on Tag
+func ValidateTag(body *Tag) (err error) {
 	if body.ID == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
 	}

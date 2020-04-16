@@ -210,9 +210,9 @@ func marshalResourceviewsResourceViewToResourceResponse(v *resourceviews.Resourc
 		}
 	}
 	if v.Tags != nil {
-		res.Tags = make([]*ResourceTagResponse, len(v.Tags))
+		res.Tags = make([]*Tag, len(v.Tags))
 		for i, val := range v.Tags {
-			res.Tags[i] = marshalResourceviewsResourceTagViewToResourceTagResponse(val)
+			res.Tags[i] = marshalResourceviewsTagToTag(val)
 		}
 	}
 
@@ -242,11 +242,10 @@ func marshalResourceviewsResourceVersionViewToResourceVersionResponse(v *resourc
 	return res
 }
 
-// marshalResourceviewsResourceTagViewToResourceTagResponse builds a value of
-// type *ResourceTagResponse from a value of type
-// *resourceviews.ResourceTagView.
-func marshalResourceviewsResourceTagViewToResourceTagResponse(v *resourceviews.ResourceTagView) *ResourceTagResponse {
-	res := &ResourceTagResponse{
+// marshalResourceviewsTagToTag builds a value of type *Tag from a value of
+// type *resourceviews.Tag.
+func marshalResourceviewsTagToTag(v *resourceviews.Tag) *Tag {
+	res := &Tag{
 		ID:   *v.ID,
 		Name: *v.Name,
 	}
@@ -275,9 +274,9 @@ func marshalResourceResourceToResourceResponse(v *resource.Resource) *ResourceRe
 		}
 	}
 	if v.Tags != nil {
-		res.Tags = make([]*ResourceTagResponse, len(v.Tags))
+		res.Tags = make([]*Tag, len(v.Tags))
 		for i, val := range v.Tags {
-			res.Tags[i] = marshalResourceResourceTagToResourceTagResponse(val)
+			res.Tags[i] = marshalResourceTagToTag(val)
 		}
 	}
 
@@ -306,10 +305,10 @@ func marshalResourceResourceVersionToResourceVersionResponse(v *resource.Resourc
 	return res
 }
 
-// marshalResourceResourceTagToResourceTagResponse builds a value of type
-// *ResourceTagResponse from a value of type *resource.ResourceTag.
-func marshalResourceResourceTagToResourceTagResponse(v *resource.ResourceTag) *ResourceTagResponse {
-	res := &ResourceTagResponse{
+// marshalResourceTagToTag builds a value of type *Tag from a value of type
+// *resource.Tag.
+func marshalResourceTagToTag(v *resource.Tag) *Tag {
+	res := &Tag{
 		ID:   v.ID,
 		Name: v.Name,
 	}

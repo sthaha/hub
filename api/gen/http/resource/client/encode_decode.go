@@ -315,9 +315,9 @@ func unmarshalResourceResponseToResourceviewsResourceView(v *ResourceResponse) *
 	for i, val := range v.Versions {
 		res.Versions[i] = unmarshalResourceVersionResponseToResourceviewsResourceVersionView(val)
 	}
-	res.Tags = make([]*resourceviews.ResourceTagView, len(v.Tags))
+	res.Tags = make([]*resourceviews.Tag, len(v.Tags))
 	for i, val := range v.Tags {
-		res.Tags[i] = unmarshalResourceTagResponseToResourceviewsResourceTagView(val)
+		res.Tags[i] = unmarshalTagToResourceviewsTag(val)
 	}
 
 	return res
@@ -346,11 +346,10 @@ func unmarshalResourceVersionResponseToResourceviewsResourceVersionView(v *Resou
 	return res
 }
 
-// unmarshalResourceTagResponseToResourceviewsResourceTagView builds a value of
-// type *resourceviews.ResourceTagView from a value of type
-// *ResourceTagResponse.
-func unmarshalResourceTagResponseToResourceviewsResourceTagView(v *ResourceTagResponse) *resourceviews.ResourceTagView {
-	res := &resourceviews.ResourceTagView{
+// unmarshalTagToResourceviewsTag builds a value of type *resourceviews.Tag
+// from a value of type *Tag.
+func unmarshalTagToResourceviewsTag(v *Tag) *resourceviews.Tag {
+	res := &resourceviews.Tag{
 		ID:   v.ID,
 		Name: v.Name,
 	}
@@ -374,9 +373,9 @@ func unmarshalResourceResponseToResourceResource(v *ResourceResponse) *resource.
 	for i, val := range v.Versions {
 		res.Versions[i] = unmarshalResourceVersionResponseToResourceResourceVersion(val)
 	}
-	res.Tags = make([]*resource.ResourceTag, len(v.Tags))
+	res.Tags = make([]*resource.Tag, len(v.Tags))
 	for i, val := range v.Tags {
-		res.Tags[i] = unmarshalResourceTagResponseToResourceResourceTag(val)
+		res.Tags[i] = unmarshalTagToResourceTag(val)
 	}
 
 	return res
@@ -404,10 +403,10 @@ func unmarshalResourceVersionResponseToResourceResourceVersion(v *ResourceVersio
 	return res
 }
 
-// unmarshalResourceTagResponseToResourceResourceTag builds a value of type
-// *resource.ResourceTag from a value of type *ResourceTagResponse.
-func unmarshalResourceTagResponseToResourceResourceTag(v *ResourceTagResponse) *resource.ResourceTag {
-	res := &resource.ResourceTag{
+// unmarshalTagToResourceTag builds a value of type *resource.Tag from a value
+// of type *Tag.
+func unmarshalTagToResourceTag(v *Tag) *resource.Tag {
+	res := &resource.Tag{
 		ID:   *v.ID,
 		Name: *v.Name,
 	}

@@ -88,7 +88,7 @@ type Resource struct {
 	// Different Versions of the resource
 	Versions []*ResourceVersion
 	// Tags associated to the resource
-	Tags []*ResourceTag
+	Tags []*Tag
 	// Rating of resource
 	Rating float64
 	// TimeStamp the resource last updated at
@@ -109,7 +109,7 @@ type ResourceVersion struct {
 	Version string
 }
 
-type ResourceTag struct {
+type Tag struct {
 	// ID is the unique id of the tag
 	ID uint
 	// Name of the tag
@@ -180,9 +180,9 @@ func newResource(vres *resourceviews.ResourceView) *Resource {
 		}
 	}
 	if vres.Tags != nil {
-		res.Tags = make([]*ResourceTag, len(vres.Tags))
+		res.Tags = make([]*Tag, len(vres.Tags))
 		for i, val := range vres.Tags {
-			res.Tags[i] = transformResourceviewsResourceTagViewToResourceTag(val)
+			res.Tags[i] = transformResourceviewsTagToTag(val)
 		}
 	}
 	return res
@@ -209,9 +209,9 @@ func newResourceView(res *Resource) *resourceviews.ResourceView {
 		}
 	}
 	if res.Tags != nil {
-		vres.Tags = make([]*resourceviews.ResourceTagView, len(res.Tags))
+		vres.Tags = make([]*resourceviews.Tag, len(res.Tags))
 		for i, val := range res.Tags {
-			vres.Tags[i] = transformResourceTagToResourceviewsResourceTagView(val)
+			vres.Tags[i] = transformTagToResourceviewsTag(val)
 		}
 	}
 	return vres
@@ -246,13 +246,13 @@ func transformResourceviewsResourceVersionViewToResourceVersion(v *resourceviews
 	return res
 }
 
-// transformResourceviewsResourceTagViewToResourceTag builds a value of type
-// *ResourceTag from a value of type *resourceviews.ResourceTagView.
-func transformResourceviewsResourceTagViewToResourceTag(v *resourceviews.ResourceTagView) *ResourceTag {
+// transformResourceviewsTagToTag builds a value of type *Tag from a value of
+// type *resourceviews.Tag.
+func transformResourceviewsTagToTag(v *resourceviews.Tag) *Tag {
 	if v == nil {
 		return nil
 	}
-	res := &ResourceTag{
+	res := &Tag{
 		ID:   *v.ID,
 		Name: *v.Name,
 	}
@@ -283,10 +283,10 @@ func transformResourceVersionToResourceviewsResourceVersionView(v *ResourceVersi
 	return res
 }
 
-// transformResourceTagToResourceviewsResourceTagView builds a value of type
-// *resourceviews.ResourceTagView from a value of type *ResourceTag.
-func transformResourceTagToResourceviewsResourceTagView(v *ResourceTag) *resourceviews.ResourceTagView {
-	res := &resourceviews.ResourceTagView{
+// transformTagToResourceviewsTag builds a value of type *resourceviews.Tag
+// from a value of type *Tag.
+func transformTagToResourceviewsTag(v *Tag) *resourceviews.Tag {
+	res := &resourceviews.Tag{
 		ID:   &v.ID,
 		Name: &v.Name,
 	}
