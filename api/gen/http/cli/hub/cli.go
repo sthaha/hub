@@ -13,7 +13,8 @@ import (
 	"net/http"
 	"os"
 
-	apic "github.com/tektoncd/hub/api/gen/http/api/client"
+	categoryc "github.com/tektoncd/hub/api/gen/http/category/client"
+	resourcec "github.com/tektoncd/hub/api/gen/http/resource/client"
 	goahttp "goa.design/goa/v3/http"
 	goa "goa.design/goa/v3/pkg"
 )
@@ -23,13 +24,15 @@ import (
 //    command (subcommand1|subcommand2|...)
 //
 func UsageCommands() string {
-	return `api list
+	return `resource (all|all-versions|get-rating|update-rating)
+category categories
 `
 }
 
 // UsageExamples produces an example of a valid invocation of the CLI tool.
 func UsageExamples() string {
-	return os.Args[0] + ` api list` + "\n" +
+	return os.Args[0] + ` resource all --limit 9419416571244238326` + "\n" +
+		os.Args[0] + ` category categories` + "\n" +
 		""
 }
 
@@ -43,12 +46,33 @@ func ParseEndpoint(
 	restore bool,
 ) (goa.Endpoint, interface{}, error) {
 	var (
-		apiFlags = flag.NewFlagSet("api", flag.ContinueOnError)
+		resourceFlags = flag.NewFlagSet("resource", flag.ContinueOnError)
 
-		apiListFlags = flag.NewFlagSet("list", flag.ExitOnError)
+		resourceAllFlags     = flag.NewFlagSet("all", flag.ExitOnError)
+		resourceAllLimitFlag = resourceAllFlags.String("limit", "100", "")
+
+		resourceAllVersionsFlags          = flag.NewFlagSet("all-versions", flag.ExitOnError)
+		resourceAllVersionsResourceIDFlag = resourceAllVersionsFlags.String("resource-id", "REQUIRED", "Id of the Resource")
+
+		resourceGetRatingFlags          = flag.NewFlagSet("get-rating", flag.ExitOnError)
+		resourceGetRatingResourceIDFlag = resourceGetRatingFlags.String("resource-id", "REQUIRED", "Id of the Resource")
+
+		resourceUpdateRatingFlags          = flag.NewFlagSet("update-rating", flag.ExitOnError)
+		resourceUpdateRatingBodyFlag       = resourceUpdateRatingFlags.String("body", "REQUIRED", "")
+		resourceUpdateRatingResourceIDFlag = resourceUpdateRatingFlags.String("resource-id", "REQUIRED", "Id of the Resource")
+
+		categoryFlags = flag.NewFlagSet("category", flag.ContinueOnError)
+
+		categoryCategoriesFlags = flag.NewFlagSet("categories", flag.ExitOnError)
 	)
-	apiFlags.Usage = apiUsage
-	apiListFlags.Usage = apiListUsage
+	resourceFlags.Usage = resourceUsage
+	resourceAllFlags.Usage = resourceAllUsage
+	resourceAllVersionsFlags.Usage = resourceAllVersionsUsage
+	resourceGetRatingFlags.Usage = resourceGetRatingUsage
+	resourceUpdateRatingFlags.Usage = resourceUpdateRatingUsage
+
+	categoryFlags.Usage = categoryUsage
+	categoryCategoriesFlags.Usage = categoryCategoriesUsage
 
 	if err := flag.CommandLine.Parse(os.Args[1:]); err != nil {
 		return nil, nil, err
@@ -65,8 +89,10 @@ func ParseEndpoint(
 	{
 		svcn = flag.Arg(0)
 		switch svcn {
-		case "api":
-			svcf = apiFlags
+		case "resource":
+			svcf = resourceFlags
+		case "category":
+			svcf = categoryFlags
 		default:
 			return nil, nil, fmt.Errorf("unknown service %q", svcn)
 		}
@@ -82,10 +108,26 @@ func ParseEndpoint(
 	{
 		epn = svcf.Arg(0)
 		switch svcn {
-		case "api":
+		case "resource":
 			switch epn {
-			case "list":
-				epf = apiListFlags
+			case "all":
+				epf = resourceAllFlags
+
+			case "all-versions":
+				epf = resourceAllVersionsFlags
+
+			case "get-rating":
+				epf = resourceGetRatingFlags
+
+			case "update-rating":
+				epf = resourceUpdateRatingFlags
+
+			}
+
+		case "category":
+			switch epn {
+			case "categories":
+				epf = categoryCategoriesFlags
 
 			}
 
@@ -109,11 +151,27 @@ func ParseEndpoint(
 	)
 	{
 		switch svcn {
-		case "api":
-			c := apic.NewClient(scheme, host, doer, enc, dec, restore)
+		case "resource":
+			c := resourcec.NewClient(scheme, host, doer, enc, dec, restore)
 			switch epn {
-			case "list":
-				endpoint = c.List()
+			case "all":
+				endpoint = c.All()
+				data, err = resourcec.BuildAllPayload(*resourceAllLimitFlag)
+			case "all-versions":
+				endpoint = c.AllVersions()
+				data, err = resourcec.BuildAllVersionsPayload(*resourceAllVersionsResourceIDFlag)
+			case "get-rating":
+				endpoint = c.GetRating()
+				data, err = resourcec.BuildGetRatingPayload(*resourceGetRatingResourceIDFlag)
+			case "update-rating":
+				endpoint = c.UpdateRating()
+				data, err = resourcec.BuildUpdateRatingPayload(*resourceUpdateRatingBodyFlag, *resourceUpdateRatingResourceIDFlag)
+			}
+		case "category":
+			c := categoryc.NewClient(scheme, host, doer, enc, dec, restore)
+			switch epn {
+			case "categories":
+				endpoint = c.Categories()
 				data = nil
 			}
 		}
@@ -125,25 +183,88 @@ func ParseEndpoint(
 	return endpoint, data, nil
 }
 
-// apiUsage displays the usage of the api command and its subcommands.
-func apiUsage() {
-	fmt.Fprintf(os.Stderr, `The api service gives resource details
+// resourceUsage displays the usage of the resource command and its subcommands.
+func resourceUsage() {
+	fmt.Fprintf(os.Stderr, `The resource service gives resource details
 Usage:
-    %s [globalflags] api COMMAND [flags]
+    %s [globalflags] resource COMMAND [flags]
 
 COMMAND:
-    list: Get all tasks and pipelines.
+    all: Get all tasks and pipelines.
+    all-versions: Get all versions of a resource
+    get-rating: Get User's rating of a resource
+    update-rating: Update User's rating of a resource
 
 Additional help:
-    %s api COMMAND --help
+    %s resource COMMAND --help
 `, os.Args[0], os.Args[0])
 }
-func apiListUsage() {
-	fmt.Fprintf(os.Stderr, `%s [flags] api list
+func resourceAllUsage() {
+	fmt.Fprintf(os.Stderr, `%s [flags] resource all -limit UINT
 
 Get all tasks and pipelines.
+    -limit UINT: 
 
 Example:
-    `+os.Args[0]+` api list
+    `+os.Args[0]+` resource all --limit 9419416571244238326
+`, os.Args[0])
+}
+
+func resourceAllVersionsUsage() {
+	fmt.Fprintf(os.Stderr, `%s [flags] resource all-versions -resource-id UINT
+
+Get all versions of a resource
+    -resource-id UINT: Id of the Resource
+
+Example:
+    `+os.Args[0]+` resource all-versions --resource-id 8023022838646083792
+`, os.Args[0])
+}
+
+func resourceGetRatingUsage() {
+	fmt.Fprintf(os.Stderr, `%s [flags] resource get-rating -resource-id UINT
+
+Get User's rating of a resource
+    -resource-id UINT: Id of the Resource
+
+Example:
+    `+os.Args[0]+` resource get-rating --resource-id 7583277825226825956
+`, os.Args[0])
+}
+
+func resourceUpdateRatingUsage() {
+	fmt.Fprintf(os.Stderr, `%s [flags] resource update-rating -body JSON -resource-id UINT
+
+Update User's rating of a resource
+    -body JSON: 
+    -resource-id UINT: Id of the Resource
+
+Example:
+    `+os.Args[0]+` resource update-rating --body '{
+      "rating": 364697698949290656
+   }' --resource-id 16221622227908616570
+`, os.Args[0])
+}
+
+// categoryUsage displays the usage of the category command and its subcommands.
+func categoryUsage() {
+	fmt.Fprintf(os.Stderr, `The category service gives categories details
+Usage:
+    %s [globalflags] category COMMAND [flags]
+
+COMMAND:
+    categories: Get all Categories with their associated tags.
+
+Additional help:
+    %s category COMMAND --help
+`, os.Args[0], os.Args[0])
+}
+func categoryCategoriesUsage() {
+	fmt.Fprintf(os.Stderr, `%s [flags] category categories
+
+Get all Categories with their associated tags.
+
+Example:
+    `+os.Args[0]+` category categories
 `, os.Args[0])
 }

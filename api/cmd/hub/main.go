@@ -12,7 +12,8 @@ import (
 	"sync"
 
 	hub "github.com/tektoncd/hub/api"
-	api "github.com/tektoncd/hub/api/gen/api"
+	category "github.com/tektoncd/hub/api/gen/category"
+	resource "github.com/tektoncd/hub/api/gen/resource"
 )
 
 func main() {
@@ -37,19 +38,23 @@ func main() {
 
 	// Initialize the services.
 	var (
-		apiSvc api.Service
+		resourceSvc resource.Service
+		categorySvc category.Service
 	)
 	{
-		apiSvc = hub.NewAPI(logger)
+		resourceSvc = hub.NewResource(logger)
+		categorySvc = hub.NewCategory(logger)
 	}
 
 	// Wrap the services in endpoints that can be invoked from other services
 	// potentially running in different processes.
 	var (
-		apiEndpoints *api.Endpoints
+		resourceEndpoints *resource.Endpoints
+		categoryEndpoints *category.Endpoints
 	)
 	{
-		apiEndpoints = api.NewEndpoints(apiSvc)
+		resourceEndpoints = resource.NewEndpoints(resourceSvc)
+		categoryEndpoints = category.NewEndpoints(categorySvc)
 	}
 
 	// Create channel used by both the signal handler and server goroutines
@@ -89,7 +94,7 @@ func main() {
 			} else if u.Port() == "" {
 				u.Host += ":80"
 			}
-			handleHTTPServer(ctx, u, apiEndpoints, &wg, errc, logger, *dbgF)
+			handleHTTPServer(ctx, u, resourceEndpoints, categoryEndpoints, &wg, errc, logger, *dbgF)
 		}
 
 	default:
