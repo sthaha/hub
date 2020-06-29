@@ -88,10 +88,6 @@ type TestConfig struct {
 }
 
 func BaseConfigFromEnv() (*BaseConfig, error) {
-	// load from .env file but skip if not found
-	if err := godotenv.Load(); err != nil {
-		fmt.Fprintf(os.Stdout, "SKIP: loading .ApiConfig failed: %s", err)
-	}
 	mode := Environment()
 	var err error
 
@@ -117,6 +113,10 @@ func BaseConfigFromEnv() (*BaseConfig, error) {
 }
 
 func FromEnv() (*ApiConfig, error) {
+	// load from .env.dev file for development but skip if not found
+	if err := godotenv.Load(os.ExpandEnv(".env.dev")); err != nil {
+		fmt.Fprintf(os.Stdout, "SKIP: .env loading .ApiConfig failed: %s", err)
+	}
 	bc, err := BaseConfigFromEnv()
 	if err != nil {
 		return nil, err
@@ -124,6 +124,27 @@ func FromEnv() (*ApiConfig, error) {
 	ApiConfig := &ApiConfig{BaseConfig: bc}
 
 	return ApiConfig, nil
+}
+
+func TestConfigFromEnv() (*ApiConfig, error) {
+	// Path to .env.test
+	pwd, err := os.Getwd()
+	if err != nil {
+		fmt.Println("failed to get path to current working directory -", err)
+		os.Exit(1)
+	}
+	parts := strings.Split(pwd, "/api")
+	path := parts[0] + "/api/.env.test"
+	// load from .env.test file for test but skip if not found
+	if err := godotenv.Load(os.ExpandEnv(path)); err != nil {
+		fmt.Fprintf(os.Stdout, "SKIP:loading .ApiConfig failed: %s", err)
+	}
+	bc, err := BaseConfigFromEnv()
+	if err != nil {
+		return nil, err
+	}
+	TestConfig := &ApiConfig{BaseConfig: bc}
+	return TestConfig, nil
 }
 
 func Environment() EnvMode {
@@ -145,6 +166,26 @@ func Environment() EnvMode {
 func initDB(mode EnvMode) (*Database, error) {
 	var err error
 	db := &Database{}
+
+	if mode == Test {
+		if db.Host, err = env("TEST_POSTGRESQL_HOST"); err != nil {
+			return nil, err
+		}
+		if db.Port, err = env("TEST_POSTGRESQL_PORT"); err != nil {
+			return nil, err
+		}
+		if db.Name, err = env("TEST_POSTGRESQL_DATABASE"); err != nil {
+			return nil, err
+		}
+		if db.User, err = env("TEST_POSTGRESQL_USER"); err != nil {
+			return nil, err
+		}
+		if db.Password, err = env("TEST_POSTGRESQL_PASSWORD"); err != nil {
+			return nil, err
+		}
+
+		return db, nil
+	}
 	if db.Host, err = env("POSTGRESQL_HOST"); err != nil {
 		return nil, err
 	}

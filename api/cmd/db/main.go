@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
-	"github.com/tektoncd/hub/api/pkg/db/model"
-	app "github.com/tektoncd/hub/api/pkg/app"
 
+	app "github.com/tektoncd/hub/api/pkg/app"
+	"github.com/tektoncd/hub/api/pkg/db/model"
 )
 
 func main() {

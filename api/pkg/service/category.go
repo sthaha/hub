@@ -2,7 +2,10 @@ package hub
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/jinzhu/gorm"
+	"github.com/tektoncd/hub/api/pkg/db/model"
 	"go.uber.org/zap"
 
 	category "github.com/tektoncd/hub/api/gen/category"
@@ -23,6 +26,26 @@ func NewCategory(api *app.ApiConfig) category.Service {
 
 // Get all Categories with their tags sorted by name
 func (s *categorysrvc) All(ctx context.Context) (res []*category.Category, err error) {
-	s.logger.Info("category.All")
-	return
+	var all []model.Category
+	if err := s.db.Order("name").Preload("Tags").Find(&all).Error; err != nil {
+		s.logger.Error(err)
+		return []*category.Category{}, category.MakeInternalError(fmt.Errorf("Failed to fetch categories"))
+	}
+
+	for _, c := range all {
+		tags := []*category.Tag{}
+		for _, t := range c.Tags {
+			tags = append(tags, &category.Tag{
+				ID:   t.ID,
+				Name: t.Name,
+			})
+		}
+		res = append(res, &category.Category{
+			ID:   c.ID,
+			Name: c.Name,
+			Tags: tags,
+		})
+	}
+
+	return res, nil
 }

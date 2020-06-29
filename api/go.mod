@@ -3,10 +3,13 @@ module github.com/tektoncd/hub/api
 go 1.13
 
 require (
+	github.com/go-testfixtures/testfixtures/v3 v3.2.0
 	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/ikawaha/goahttpcheck v1.3.1
 	github.com/jinzhu/gorm v1.9.12
 	github.com/joho/godotenv v1.3.0
-	github.com/lib/pq v1.1.1
+	github.com/lib/pq v1.3.0
+	github.com/stretchr/testify v1.4.0
 	go.uber.org/zap v1.10.0
 	goa.design/goa/v3 v3.1.3
 	goa.design/plugins/v3 v3.1.3

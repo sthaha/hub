@@ -76,10 +76,10 @@ run_db() {
   source "$API_DIR/.env.test"
   container_id=$(docker run -d  \
     --name $POSTGRES_CONTAINER \
-    -e POSTGRES_USER="$POSTGRES_USER"  \
-    -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
-    -e POSTGRES_DB="$POSTGRES_PASSWORD" \
-    -p "$POSTGRES_PORT:5432" \
+    -e POSTGRES_USER="$TEST_POSTGRESQL_USER"  \
+    -e POSTGRES_PASSWORD="$TEST_POSTGRESQL_PASSWORD" \
+    -e POSTGRES_DB="$TEST_POSTGRESQL_DATABASE" \
+    -p "$TEST_POSTGRESQL_PORT:5432" \
     postgres
   )
 
