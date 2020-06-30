@@ -15,12 +15,12 @@ import (
 )
 
 func TestCategories_List(t *testing.T) {
-	tc, _ := testutils.Config()
 
-	if err := LoadFixtures(tc, "./fixtures"); err != nil {
+	if err := testutils.LoadFixtures(testutils.FixturePath()); err != nil {
 		assert.FailNow(t, "Failed to load fixtures", err)
 	}
 
+	tc, _ := testutils.Config()
 	checker := goahttpcheck.New()
 	checker.Mount(
 		categoryServer.NewListHandler,
