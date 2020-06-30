@@ -5,17 +5,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/tektoncd/hub/api/gen/category"
 )
 
-var (
-	categorySvc category.Service
-)
+var ()
 
-func Test_All(t *testing.T) {
+func TestCategory_List(t *testing.T) {
 	LoadFixture(db, "../../fixtures")
-	categorySvc = NewCategory(testConfig)
-	all, err := categorySvc.All(context.Background())
+	categorySvc := NewCategory(testConfig)
+
+	all, err := categorySvc.List(context.Background())
+
 	assert.NoError(t, err)
 	assert.Equal(t, 3, len(all))
 	assert.Equal(t, 2, len(all[0].Tags))

@@ -2,12 +2,13 @@ package app
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"os"
-	"strings"
 
 	// Blank for package side effect: loads postgres drivers
 	_ "github.com/lib/pq"
@@ -16,7 +17,7 @@ import (
 type Base interface {
 	Environment() EnvMode
 	Logger() *zap.SugaredLogger
-	Databse() *Database
+	DB() *gorm.DB
 	Cleanup()
 }
 
@@ -31,6 +32,8 @@ const (
 	Development EnvMode = "development"
 	Test        EnvMode = "test"
 )
+
+const DBDialect = "postgres"
 
 type Database struct {
 	Host     string
@@ -72,10 +75,6 @@ func (bc *BaseConfig) Cleanup() {
 	bc.db.Close()
 }
 
-func (bc *BaseConfig) Database() *Database {
-	return bc.dbConf
-}
-
 func (bc *BaseConfig) DB() *gorm.DB {
 	return bc.db
 }
@@ -99,11 +98,11 @@ func BaseConfigFromEnv() (*BaseConfig, error) {
 	log.With("name", "app").Infof("in %q mode ", mode)
 
 	bc := &BaseConfig{mode: mode, logger: log}
-	if bc.dbConf, err = initDB(mode); err != nil {
+	if bc.dbConf, err = initDB(); err != nil {
 		log.Error(err, "failed to obtain database configuration")
 		return nil, err
 	}
-	bc.db, err = gorm.Open("postgres", bc.dbConf.ConnectionString())
+	bc.db, err = gorm.Open(DBDialect, bc.dbConf.ConnectionString())
 	if err != nil {
 		log.Error(err, "failed to establish database connection")
 		return nil, err
@@ -113,10 +112,16 @@ func BaseConfigFromEnv() (*BaseConfig, error) {
 }
 
 func FromEnv() (*ApiConfig, error) {
+	return FromEnvFile(".env.dev")
+}
+
+func FromEnvFile(path string) (*ApiConfig, error) {
+
 	// load from .env.dev file for development but skip if not found
-	if err := godotenv.Load(os.ExpandEnv(".env.dev")); err != nil {
-		fmt.Fprintf(os.Stdout, "SKIP: .env loading .ApiConfig failed: %s", err)
+	if err := godotenv.Load(path); err != nil {
+		fmt.Fprintf(os.Stdout, "SKIP: %s loading .ApiConfig failed: %s", path, err)
 	}
+
 	bc, err := BaseConfigFromEnv()
 	if err != nil {
 		return nil, err
@@ -124,27 +129,6 @@ func FromEnv() (*ApiConfig, error) {
 	ApiConfig := &ApiConfig{BaseConfig: bc}
 
 	return ApiConfig, nil
-}
-
-func TestConfigFromEnv() (*ApiConfig, error) {
-	// Path to .env.test
-	pwd, err := os.Getwd()
-	if err != nil {
-		fmt.Println("failed to get path to current working directory -", err)
-		os.Exit(1)
-	}
-	parts := strings.Split(pwd, "/api")
-	path := parts[0] + "/api/.env.test"
-	// load from .env.test file for test but skip if not found
-	if err := godotenv.Load(os.ExpandEnv(path)); err != nil {
-		fmt.Fprintf(os.Stdout, "SKIP:loading .ApiConfig failed: %s", err)
-	}
-	bc, err := BaseConfigFromEnv()
-	if err != nil {
-		return nil, err
-	}
-	TestConfig := &ApiConfig{BaseConfig: bc}
-	return TestConfig, nil
 }
 
 func Environment() EnvMode {
@@ -163,29 +147,10 @@ func Environment() EnvMode {
 	}
 }
 
-func initDB(mode EnvMode) (*Database, error) {
+func initDB() (*Database, error) {
 	var err error
 	db := &Database{}
 
-	if mode == Test {
-		if db.Host, err = env("TEST_POSTGRESQL_HOST"); err != nil {
-			return nil, err
-		}
-		if db.Port, err = env("TEST_POSTGRESQL_PORT"); err != nil {
-			return nil, err
-		}
-		if db.Name, err = env("TEST_POSTGRESQL_DATABASE"); err != nil {
-			return nil, err
-		}
-		if db.User, err = env("TEST_POSTGRESQL_USER"); err != nil {
-			return nil, err
-		}
-		if db.Password, err = env("TEST_POSTGRESQL_PASSWORD"); err != nil {
-			return nil, err
-		}
-
-		return db, nil
-	}
 	if db.Host, err = env("POSTGRESQL_HOST"); err != nil {
 		return nil, err
 	}

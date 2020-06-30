@@ -20,7 +20,7 @@ type categorysrvc struct {
 }
 
 // NewCategory returns the category service implementation.
-func NewCategory(api *app.ApiConfig) category.Service {
+func NewCategory(api app.Config) category.Service {
 	return &categorysrvc{api.Logger(), api.DB()}
 }
 
