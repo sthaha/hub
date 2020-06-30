@@ -8,14 +8,13 @@ import (
 var _ = API("hub", func() {
 	Title("Tekton Hub")
 	Description("HTTP services for managing Tekton Hub")
-	Version("1.0")
+	Version("0.1")
 	Meta("swagger:example", "false")
 	Server("hub", func() {
 		Services("category", "swagger")
-		Host("localhost", func() {
-			URI("http://localhost:8000")
-		})
 	})
+
+	// TODO: restrict CORS origin | https://github.com/tektoncd/hub/issues/26
 	cors.Origin("*", func() {
 		cors.Headers("Content-Type")
 		cors.Methods("GET")

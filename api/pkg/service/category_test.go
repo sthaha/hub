@@ -1,10 +1,11 @@
-package hub
+package service
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
-	category "github.com/tektoncd/hub/api/gen/category"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/tektoncd/hub/api/gen/category"
 )
 
 var (

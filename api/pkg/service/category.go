@@ -1,4 +1,4 @@
-package hub
+package service
 
 import (
 	"context"
@@ -24,8 +24,8 @@ func NewCategory(api *app.ApiConfig) category.Service {
 	return &categorysrvc{api.Logger(), api.DB()}
 }
 
-// Get all Categories with their tags sorted by name
-func (s *categorysrvc) All(ctx context.Context) (res []*category.Category, err error) {
+// List all categories along with their tags sorted by name
+func (s *categorysrvc) List(ctx context.Context) (res []*category.Category, err error) {
 	var all []model.Category
 	if err := s.db.Order("name").Preload("Tags").Find(&all).Error; err != nil {
 		s.logger.Error(err)
