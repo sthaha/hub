@@ -101,7 +101,7 @@ func BaseConfigFromEnv() (*BaseConfig, error) {
 	}
 	bc.db, err = gorm.Open(DBDialect, bc.dbConf.ConnectionString())
 	if err != nil {
-		log.Error(err, "failed to establish database connection")
+		log.Errorf("failed to establish database connection %s: %s", bc.dbConf, err)
 		return nil, err
 	}
 	log.Infof("Successfully connected to [%s]", bc.dbConf)
