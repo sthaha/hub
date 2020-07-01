@@ -1,4 +1,4 @@
-package service
+package category
 
 import (
 	"context"
@@ -12,8 +12,8 @@ func TestCategory_List(t *testing.T) {
 	tc := testutils.Config()
 	testutils.LoadFixtures(t, tc.FixturePath())
 
-	categorySvc := NewCategory(tc)
-	all, err := categorySvc.List(context.Background())
+	category := New(tc)
+	all, err := category.List(context.Background())
 
 	assert.NoError(t, err)
 	assert.Equal(t, 3, len(all))

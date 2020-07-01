@@ -14,7 +14,7 @@ import (
 
 	"github.com/tektoncd/hub/api/gen/category"
 	"github.com/tektoncd/hub/api/pkg/app"
-	"github.com/tektoncd/hub/api/pkg/service"
+	categorysvc "github.com/tektoncd/hub/api/pkg/service/category"
 )
 
 func main() {
@@ -51,7 +51,7 @@ func main() {
 		categorySvc category.Service
 	)
 	{
-		categorySvc = service.NewCategory(api)
+		categorySvc = categorysvc.New(api)
 	}
 
 	// Wrap the services in endpoints that can be invoked from other services

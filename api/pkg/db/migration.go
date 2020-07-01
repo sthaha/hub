@@ -7,14 +7,15 @@ import (
 	"gopkg.in/gormigrate.v1"
 )
 
+// TODO(sthaha): move to db command
 // Migrate create tables and populates master tables
 func Migrate(api *app.ApiConfig) error {
 
 	logger := api.Logger()
 
-	// NOTE: If writing a migration for a new table then add the same in InitSchema
+	// NOTE: when writing a migration for a new table, add the same in InitSchema
 	migration := gormigrate.New(api.DB(), gormigrate.DefaultOptions, []*gormigrate.Migration{
-		// NOTE: Add Migration Here
+		// NOTE: Add Migrations Here
 	})
 
 	migration.InitSchema(func(db *gorm.DB) error {

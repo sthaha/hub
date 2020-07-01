@@ -1,4 +1,4 @@
-package service
+package category
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"github.com/ikawaha/goahttpcheck"
 	"github.com/stretchr/testify/assert"
 	category "github.com/tektoncd/hub/api/gen/category"
-	categoryServer "github.com/tektoncd/hub/api/gen/http/category/server"
+	server "github.com/tektoncd/hub/api/gen/http/category/server"
 	"github.com/tektoncd/hub/api/pkg/testutils"
 )
 
@@ -19,9 +19,9 @@ func TestCategories_List_Http(t *testing.T) {
 
 	checker := goahttpcheck.New()
 	checker.Mount(
-		categoryServer.NewListHandler,
-		categoryServer.MountListHandler,
-		category.NewListEndpoint(NewCategory(tc)))
+		server.NewListHandler,
+		server.MountListHandler,
+		category.NewListEndpoint(New(tc)))
 
 	checker.Test(t, http.MethodGet, "/categories").Check().
 		HasStatus(http.StatusOK).Cb(func(r *http.Response) {
