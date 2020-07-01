@@ -23,16 +23,15 @@ func TestCategories_List_Http(t *testing.T) {
 		categoryServer.MountListHandler,
 		category.NewListEndpoint(NewCategory(tc)))
 
-	checker.Test(t, http.MethodGet, "/categories").
-		Check().HasStatus(http.StatusOK).Cb(func(r *http.Response) {
-
-		b, err := ioutil.ReadAll(r.Body)
-		assert.NoError(t, err)
+	checker.Test(t, http.MethodGet, "/categories").Check().
+		HasStatus(http.StatusOK).Cb(func(r *http.Response) {
+		b, readErr := ioutil.ReadAll(r.Body)
+		assert.NoError(t, readErr)
 		defer r.Body.Close()
 
 		var jsonMap []map[string]interface{}
-		err = json.Unmarshal([]byte(b), &jsonMap)
-		assert.NoError(t, err)
+		marshallErr := json.Unmarshal([]byte(b), &jsonMap)
+		assert.NoError(t, marshallErr)
 
 		assert.Equal(t, 3, len(jsonMap))
 		assert.Equal(t, "abc", jsonMap[0]["name"])
