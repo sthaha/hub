@@ -3,7 +3,7 @@ package service
 import (
 	"testing"
 
-	"github.com/tektoncd/hub/api/test/testutils"
+	"github.com/tektoncd/hub/api/pkg/testutils"
 )
 
 func TestMain(m *testing.M) {

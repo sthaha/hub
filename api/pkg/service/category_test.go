@@ -5,15 +5,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/tektoncd/hub/api/test/testutils"
+	"github.com/tektoncd/hub/api/pkg/testutils"
 )
 
 func TestCategory_List(t *testing.T) {
-	if err := testutils.LoadFixtures(testutils.FixturePath()); err != nil {
-		assert.FailNow(t, "Failed to load fixtures", err)
-	}
+	tc := testutils.Config()
+	testutils.LoadFixtures(t, tc.FixturePath())
 
-	tc, _ := testutils.Config()
 	categorySvc := NewCategory(tc)
 	all, err := categorySvc.List(context.Background())
 

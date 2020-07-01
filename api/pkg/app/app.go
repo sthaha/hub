@@ -44,9 +44,7 @@ type Database struct {
 }
 
 func (db *Database) String() string {
-	return fmt.Sprintf(
-		"host=%s port=%s user=%s password=xxxxxx dbname=%s sslmode=disable",
-		db.Host, db.Port, db.User, db.Name)
+	return fmt.Sprintf("database=%s user=%s host=%s:%s", db.Name, db.User, db.Host, db.Port)
 }
 
 func (db *Database) ConnectionString() string {
@@ -82,9 +80,8 @@ func (bc *BaseConfig) DB() *gorm.DB {
 type ApiConfig struct {
 	*BaseConfig
 }
-type TestConfig struct {
-	*BaseConfig
-}
+
+var _ Config = (*ApiConfig)(nil)
 
 func BaseConfigFromEnv() (*BaseConfig, error) {
 	mode := Environment()
@@ -107,7 +104,7 @@ func BaseConfigFromEnv() (*BaseConfig, error) {
 		log.Error(err, "failed to establish database connection")
 		return nil, err
 	}
-	log.Infof("Successfully connected to db %s", bc.dbConf)
+	log.Infof("Successfully connected to [%s]", bc.dbConf)
 	return bc, nil
 }
 
@@ -119,7 +116,7 @@ func FromEnvFile(path string) (*ApiConfig, error) {
 
 	// load from .env.dev file for development but skip if not found
 	if err := godotenv.Load(path); err != nil {
-		fmt.Fprintf(os.Stdout, "SKIP: %s loading .ApiConfig failed: %s", path, err)
+		fmt.Fprintf(os.Stderr, "SKIP: loading env file %s failed: %s\n", path, err)
 	}
 
 	bc, err := BaseConfigFromEnv()

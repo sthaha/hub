@@ -1,4 +1,4 @@
-package hub
+package service
 
 import (
 	"encoding/json"
@@ -10,22 +10,18 @@ import (
 	"github.com/stretchr/testify/assert"
 	category "github.com/tektoncd/hub/api/gen/category"
 	categoryServer "github.com/tektoncd/hub/api/gen/http/category/server"
-	"github.com/tektoncd/hub/api/pkg/service"
-	"github.com/tektoncd/hub/api/test/testutils"
+	"github.com/tektoncd/hub/api/pkg/testutils"
 )
 
-func TestCategories_List(t *testing.T) {
+func TestCategories_List_Http(t *testing.T) {
+	tc := testutils.Config()
+	testutils.LoadFixtures(t, tc.FixturePath())
 
-	if err := testutils.LoadFixtures(testutils.FixturePath()); err != nil {
-		assert.FailNow(t, "Failed to load fixtures", err)
-	}
-
-	tc, _ := testutils.Config()
 	checker := goahttpcheck.New()
 	checker.Mount(
 		categoryServer.NewListHandler,
 		categoryServer.MountListHandler,
-		category.NewListEndpoint(service.NewCategory(tc)))
+		category.NewListEndpoint(NewCategory(tc)))
 
 	checker.Test(t, http.MethodGet, "/categories").
 		Check().HasStatus(http.StatusOK).Cb(func(r *http.Response) {
