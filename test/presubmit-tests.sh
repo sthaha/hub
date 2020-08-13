@@ -42,6 +42,14 @@ warn() {
   echo "WARN: $@"
 }
 
+install-node() {
+  info Installing node
+
+  curl -sL https://deb.nodesource.com/setup_14.x | bash -
+  apt-get install -y nodejs
+  node --version
+}
+
 install-postgres() {
   info Installing postgres 🛢🛢🛢
   apt-get install -y postgresql postgresql-contrib
@@ -77,6 +85,10 @@ api-build(){
   go build -mod=vendor ./cmd/...
 }
 
+ui-build(){
+  npm build
+}
+
 ### presubmit hooks ###
 
 run_build_tests() {
@@ -85,6 +97,7 @@ run_build_tests() {
   (
     set -eu -o pipefail
     api-build
+    ui-build
   )
 }
 
@@ -98,6 +111,14 @@ run_unit_tests() {
     cd $API_DIR
     api-build
     api-unittest
+  )
+  (
+    set -eu -o pipefail
+
+
+    cd $UI_DIR
+    ui-build
+    ui-unittest
   )
 }
 
