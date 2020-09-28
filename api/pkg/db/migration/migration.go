@@ -44,6 +44,7 @@ func Migrate(api *app.APIBase) error {
 			&model.Category{},
 			&model.Tag{},
 			&model.Catalog{},
+			&model.CatalogError{},
 			&model.Resource{},
 			&model.ResourceVersion{},
 			&model.User{},

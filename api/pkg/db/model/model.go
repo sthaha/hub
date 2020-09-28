@@ -45,6 +45,15 @@ type (
 		ContextDir string
 		SHA        string
 		Resources  []Resource
+		Errors     []CatalogError
+	}
+
+	CatalogError struct {
+		gorm.Model
+		Catalog   Catalog
+		CatalogID uint
+		Type      string
+		Detail    string
 	}
 
 	Resource struct {

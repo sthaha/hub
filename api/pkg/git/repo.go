@@ -20,13 +20,23 @@ import (
 	"time"
 )
 
-type Repo struct {
-	Path        string
-	ContextPath string
-	head        string
+type Repo interface {
+	Path() string
+	Head() string
+	ModifiedTime(path string) (time.Time, error)
+	RelPath(path string) (string, error)
 }
 
-func (r Repo) Head() string {
+type LocalRepo struct {
+	path string
+	head string
+}
+
+func (r LocalRepo) Path() string {
+	return r.path
+}
+
+func (r LocalRepo) Head() string {
 	if r.head == "" {
 		head, _ := rawGit("", "rev-parse", "HEAD")
 		r.head = strings.TrimSuffix(head, "\n")
@@ -34,10 +44,15 @@ func (r Repo) Head() string {
 	return r.head
 }
 
-func (r Repo) ModifiedTime(path string) (time.Time, error) {
-	// gitPath should be relative to the repo and not the context
-	gitPath, _ := filepath.Rel(r.Path, path)
-	commitedAt, err := rawGit(r.Path, "log", "-1", "--pretty=format:%cI", gitPath)
+// ModifiedTime returns the modified (commited/changed) time of the file by
+// querying the git history.
+func (r LocalRepo) ModifiedTime(path string) (time.Time, error) {
+	gitPath, err := r.RelPath(path)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	commitedAt, err := rawGit(r.path, "log", "-1", "--pretty=format:%cI", gitPath)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -45,7 +60,7 @@ func (r Repo) ModifiedTime(path string) (time.Time, error) {
 	return time.Parse(time.RFC3339, commitedAt)
 }
 
-func (r Repo) RelPath(path string) (string, error) {
-	basePath := filepath.Join(r.Path, r.ContextPath)
-	return filepath.Rel(basePath, path)
+// RelPath returns the path of file relative to repo's path
+func (r LocalRepo) RelPath(file string) (string, error) {
+	return filepath.Rel(r.path, file)
 }

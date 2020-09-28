@@ -53,8 +53,11 @@ func (r *Result) Error() string {
 		return ""
 	}
 
-	buf := strings.Builder{}
+	if len(r.Errors) == 1 {
+		return r.Errors[0].Error()
+	}
 
+	buf := strings.Builder{}
 	for _, err := range r.Errors {
 		buf.WriteString(err.Error())
 		buf.WriteString("\n")

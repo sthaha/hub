@@ -17,10 +17,8 @@ package git
 import (
 	"bytes"
 	"fmt"
-	"net/url"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -28,47 +26,24 @@ import (
 	"go.uber.org/zap"
 )
 
-// FetchSpec describes how to initialize and fetch from a Git repository.
-type FetchSpec struct {
-	URL       string
-	Revision  string
-	Path      string
-	Depth     uint
-	SSLVerify bool
+type Client interface {
+	Fetch(spec FetchSpec) (Repo, error)
 }
 
-func (f *FetchSpec) sanitize() {
-	f.URL = strings.TrimSpace(f.URL)
-	f.Path = strings.TrimSpace(f.Path)
-	f.Revision = strings.TrimSpace(f.Revision)
-	if f.Revision == "" {
-		// TODO(sthaha): change to main later
-		f.Revision = "master"
-	}
-}
-
-func (f *FetchSpec) clonePath() string {
-	f.sanitize()
-	u, _ := url.Parse(f.URL)
-	return filepath.Join(f.Path, u.Host, u.Path+"@"+f.Revision)
-}
-
-type Client struct {
+type client struct {
 	log *zap.SugaredLogger
 }
 
-func New(log *zap.SugaredLogger) *Client {
-	return &Client{log: log}
+func New(log *zap.SugaredLogger) Client {
+	return &client{log: log}
 }
 
 // Fetch fetches the specified git repository at the revision into path.
-func (c *Client) Fetch(spec FetchSpec) (Repo, error) {
+func (c *client) Fetch(spec FetchSpec) (Repo, error) {
 	spec.sanitize()
-
 	log := c.log.With("name", "git")
-
 	if err := ensureHomeEnv(log); err != nil {
-		return Repo{}, err
+		return nil, err
 	}
 
 	log.With("path", spec.clonePath()).Info("cloning")
@@ -76,7 +51,7 @@ func (c *Client) Fetch(spec FetchSpec) (Repo, error) {
 	repo, err := c.initRepo(spec)
 	if err != nil {
 		os.RemoveAll(spec.clonePath())
-		return Repo{}, err
+		return nil, err
 	}
 
 	fetchArgs := []string{"fetch", "--recurse-submodules=yes", "origin", spec.Revision}
@@ -88,45 +63,45 @@ func (c *Client) Fetch(spec FetchSpec) (Repo, error) {
 			log.Info("Failed to pull origin", "err", err)
 		}
 		if _, err := git(log, "", "checkout", spec.Revision); err != nil {
-			return Repo{}, err
+			return nil, err
 		}
 	} else if _, err := git(log, "", "reset", "--hard", "FETCH_HEAD"); err != nil {
-		return Repo{}, err
+		return nil, err
 	}
-	log.With("url", spec.URL, "revision", spec.Revision, "path", repo.Path).Info("successfully cloned")
+	log.With("url", spec.URL, "revision", spec.Revision, "path", repo.path).Info("successfully cloned")
 
 	return repo, nil
 }
 
-func (c *Client) initRepo(spec FetchSpec) (Repo, error) {
+func (c *client) initRepo(spec FetchSpec) (*LocalRepo, error) {
 	log := c.log.With("name", "repo").With("url", spec.URL)
 
 	clonePath := spec.clonePath()
-	repo := Repo{Path: clonePath}
+	repo := &LocalRepo{path: clonePath}
 
 	// if already cloned, cd to the cloned path
 	if _, err := os.Stat(clonePath); err == nil {
 		if err := os.Chdir(clonePath); err != nil {
-			return Repo{}, fmt.Errorf("failed to change directory with path %s; err: %w", clonePath, err)
+			return nil, fmt.Errorf("failed to change directory with path %s; err: %w", clonePath, err)
 		}
 		return repo, nil
 	}
 
 	if _, err := git(log, "", "init", clonePath); err != nil {
-		return Repo{}, err
+		return nil, err
 	}
 
 	if err := os.Chdir(clonePath); err != nil {
-		return Repo{}, fmt.Errorf("failed to change directory with path %s; err: %w", spec.Path, err)
+		return nil, fmt.Errorf("failed to change directory with path %s; err: %w", spec.Path, err)
 	}
 
 	if _, err := git(log, "", "remote", "add", "origin", spec.URL); err != nil {
-		return Repo{}, err
+		return nil, err
 	}
 
 	if _, err := git(log, "", "config", "http.sslVerify", strconv.FormatBool(spec.SSLVerify)); err != nil {
 		log.Error(err, "failed to set http.sslVerify in git configs")
-		return Repo{}, err
+		return nil, err
 	}
 	return repo, nil
 }

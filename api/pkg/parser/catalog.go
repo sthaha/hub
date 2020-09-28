@@ -63,8 +63,9 @@ type (
 )
 
 type CatalogParser struct {
-	logger *zap.SugaredLogger
-	repo   git.Repo
+	logger      *zap.SugaredLogger
+	repo        git.Repo
+	contextPath string
 }
 
 func (c *CatalogParser) Parse() ([]Resource, Result) {
@@ -76,6 +77,9 @@ func (c *CatalogParser) Parse() ([]Resource, Result) {
 		res, r := c.findResourcesByKind(k)
 		resources = append(resources, res...)
 		result.Combine(r)
+	}
+	if len(resources) == 0 {
+		result.AddError(fmt.Errorf("no resources found in repo"))
 	}
 	return resources, result
 }
@@ -94,7 +98,9 @@ func (c CatalogParser) findResourcesByKind(kind string) ([]Resource, Result) {
 	found := []Resource{}
 	result := Result{}
 
-	kindPath := filepath.Join(c.repo.Path, c.repo.ContextPath, strings.ToLower(kind))
+	// search for resources under catalog/<contextPath>/<kind>
+	kindPath := filepath.Join(c.repo.Path(), c.contextPath, strings.ToLower(kind))
+
 	resourceDirs, err := ioutil.ReadDir(kindPath)
 	if err != nil && ignoreNotExists(err) != nil {
 		log.Warnf("failed to find %s: %s", kind, err)
@@ -105,11 +111,12 @@ func (c CatalogParser) findResourcesByKind(kind string) ([]Resource, Result) {
 
 	for _, res := range resourceDirs {
 		if !res.IsDir() {
-			log.Warnf("ignoring %q not a directory for %s", res.Name(), kind)
+			log.Infof("ignoring %q not a directory for %s", res.Name(), kind)
 			continue
 		}
 
 		res, r := c.parseResource(kind, kindPath, res)
+		result.Combine(r)
 		if r.Errors != nil {
 			log.Warn(r.Error())
 			continue
@@ -155,8 +162,9 @@ func (c CatalogParser) parseResource(kind, kindPath string, f os.FileInfo) (*Res
 	for _, m := range matches {
 		log.Info(" found file: ", m)
 
-		result := c.appendVersion(&res, m)
-		if result.Errors != nil {
+		r := c.appendVersion(&res, m)
+		result.Combine(r)
+		if r.Errors != nil {
 			log.Warn(result.Error())
 			continue
 		}

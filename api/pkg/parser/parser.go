@@ -15,7 +15,6 @@
 package parser
 
 import (
-	"io"
 	"sync"
 
 	"go.uber.org/zap"
@@ -26,23 +25,22 @@ import (
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
+type Parser interface {
+	Parse() ([]Resource, error)
+}
+
 func registerSchema() {
 	beta1 := runtime.NewSchemeBuilder(v1beta1.AddToScheme)
 	beta1.AddToScheme(scheme.Scheme)
 }
 
-type Parser interface {
-	Parse() ([]Resource, error)
-}
-
 var once sync.Once
 
-func ForReader(r io.Reader) *TektonParser {
+func ForCatalog(logger *zap.SugaredLogger, repo git.Repo, contextPath string) *CatalogParser {
 	once.Do(registerSchema)
-	return &TektonParser{reader: r}
-}
-
-func ForCatalog(logger *zap.SugaredLogger, repo git.Repo) *CatalogParser {
-	once.Do(registerSchema)
-	return &CatalogParser{logger: logger.With("component", "parser"), repo: repo}
+	return &CatalogParser{
+		logger:      logger.With("component", "parser"),
+		repo:        repo,
+		contextPath: contextPath,
+	}
 }
