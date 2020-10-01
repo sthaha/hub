@@ -227,6 +227,7 @@ func APIBaseFromEnvFile(file string) (*APIBase, error) {
 		log.Errorf("failed to establish database connection: [%s]: %s", ac.dbConf, err)
 		return nil, err
 	}
+	ac.db.SetLogger(&gormLogger{ac.logger})
 	log.Infof("Successfully connected to [%s]", ac.dbConf)
 
 	url, err := configFileURL()

@@ -79,7 +79,10 @@ func Migrate(api *app.APIBase) error {
 			"user_id", "users"); err != nil {
 			return err
 		}
-		if err := fkey(log, db, model.SyncJob{}, "catalog_id", "catalogs(id)"); err != nil {
+		if err := fkey(log, db, model.SyncJob{},
+			"catalog_id", "catalogs(id)",
+			"user_id", "users(id)",
+		); err != nil {
 			return err
 		}
 

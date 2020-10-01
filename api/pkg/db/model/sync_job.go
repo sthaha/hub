@@ -38,6 +38,8 @@ type SyncJob struct {
 	Catalog   Catalog
 	CatalogID uint
 	Status    string
+	UserID    uint
+	User      User
 }
 
 func (j *SyncJob) SetState(s JobState) {

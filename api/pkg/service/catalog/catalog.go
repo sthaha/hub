@@ -19,8 +19,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jinzhu/gorm"
 	"github.com/tektoncd/hub/api/gen/catalog"
 	"github.com/tektoncd/hub/api/pkg/app"
+	"github.com/tektoncd/hub/api/pkg/db/model"
 	"github.com/tektoncd/hub/api/pkg/service/auth"
 )
 
@@ -50,30 +52,38 @@ func New(api app.Config) catalog.Service {
 	return s
 }
 
-//func (s *service) JWTAuth(ctx context.Context, jwt string, scheme *security.JWTScheme) (context.Context, error) {
-
-//return ctx, nil
-//}
-
 // refresh the catalog for new resources
 func (s *service) Refresh(ctx context.Context, p *catalog.RefreshPayload) (*catalog.Job, error) {
 
-	_, err := s.User(ctx)
+	user, err := s.User(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	log := s.Logger(ctx)
+	db := s.DB(ctx)
 
 	log.Infof("going to enqueue")
 
-	job, err := s.wq.Enqueue()
+	ctg := model.Catalog{}
+	if err := db.Model(&model.Catalog{}).First(&ctg).Error; err != nil {
+		return nil, notFoundOrInternalError(err)
+	}
+
+	job, err := s.wq.Enqueue(user.ID, ctg.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	res := &catalog.Job{ID: job.ID, Status: "queued"}
+	ret := &catalog.Job{ID: job.ID, Status: job.Status}
 	log.Infof("job %d queued for refresh", job.ID)
 
-	return res, nil
+	return ret, nil
+}
+
+func notFoundOrInternalError(err error) error {
+	if gorm.IsRecordNotFoundError(err) {
+		return notFoundError
+	}
+	return internalError
 }

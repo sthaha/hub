@@ -51,17 +51,13 @@ func newSyncer(api app.BaseConfig) *syncer {
 	}
 }
 
-func (s *syncer) Enqueue() (*model.SyncJob, error) {
-	catalog := model.Catalog{}
-	if err := s.db.Model(&model.Catalog{}).First(&catalog).Error; err != nil {
-		if gorm.IsRecordNotFoundError(err) {
-			return nil, notFoundError
-		}
-	}
+func (s *syncer) Enqueue(userID, catalogID uint) (*model.SyncJob, error) {
 
-	queued := &model.SyncJob{CatalogID: catalog.ID, Status: "queued"}
-	running := &model.SyncJob{CatalogID: catalog.ID, Status: "running"}
-	if err := s.db.Where(queued).Or(running).FirstOrCreate(queued).Error; err != nil {
+	queued := &model.SyncJob{CatalogID: catalogID, Status: "queued"}
+	running := &model.SyncJob{CatalogID: catalogID, Status: "running"}
+	newJob := &model.SyncJob{CatalogID: catalogID, Status: "queued", UserID: userID}
+
+	if err := s.db.Where(queued).Or(running).FirstOrCreate(newJob).Error; err != nil {
 		return nil, internalError
 	}
 	s.wakeUp()
