@@ -51,10 +51,6 @@ func EncodeRefreshRequest(encoder func(*http.Request) goahttp.Encoder) func(*htt
 				req.Header.Set("Authorization", head)
 			}
 		}
-		body := NewRefreshRequestBody(p)
-		if err := encoder(req).Encode(&body); err != nil {
-			return goahttp.ErrEncodingError("catalog", "Refresh", err)
-		}
 		return nil
 	}
 }

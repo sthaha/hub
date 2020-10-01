@@ -31,7 +31,7 @@ func BuildQueryPayload(resourceQueryName string, resourceQueryKinds string, reso
 		if resourceQueryKinds != "" {
 			err = json.Unmarshal([]byte(resourceQueryKinds), &kinds)
 			if err != nil {
-				return nil, fmt.Errorf("invalid JSON for kinds, example of valid JSON:\n%s", "'[\n      \"Consequatur possimus tempora omnis et nihil aut.\",\n      \"Quidem magni.\"\n   ]'")
+				return nil, fmt.Errorf("invalid JSON for kinds, example of valid JSON:\n%s", "'[\n      \"Reprehenderit libero soluta sapiente deleniti voluptatem distinctio.\",\n      \"Voluptas beatae id qui.\"\n   ]'")
 			}
 		}
 	}
@@ -40,7 +40,7 @@ func BuildQueryPayload(resourceQueryName string, resourceQueryKinds string, reso
 		if resourceQueryTags != "" {
 			err = json.Unmarshal([]byte(resourceQueryTags), &tags)
 			if err != nil {
-				return nil, fmt.Errorf("invalid JSON for tags, example of valid JSON:\n%s", "'[\n      \"Sint est omnis.\",\n      \"Sint cupiditate voluptatem ipsum tenetur.\",\n      \"Et amet eum.\"\n   ]'")
+				return nil, fmt.Errorf("invalid JSON for tags, example of valid JSON:\n%s", "'[\n      \"Possimus tempora omnis et nihil aut.\",\n      \"Quidem magni.\",\n      \"Nemo sint est omnis.\"\n   ]'")
 			}
 		}
 	}

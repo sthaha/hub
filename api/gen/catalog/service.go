@@ -17,7 +17,7 @@ import (
 
 // The Catalog Service exposes endpoints to interact with catalogs
 type Service interface {
-	// Refresh a catalog by its org and name
+	// Refreshes Tekton Catalog
 	Refresh(context.Context, *RefreshPayload) (res *Job, err error)
 }
 
@@ -41,10 +41,6 @@ var MethodNames = [1]string{"Refresh"}
 type RefreshPayload struct {
 	// JWT
 	Token string
-	// Name of Organization the Catalog is in
-	Org string
-	// Name of Catalog
-	Name string
 }
 
 // Job is the result type of the catalog service Refresh method.

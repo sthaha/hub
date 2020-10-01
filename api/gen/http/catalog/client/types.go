@@ -8,19 +8,9 @@
 package client
 
 import (
-	catalog "github.com/tektoncd/hub/api/gen/catalog"
 	catalogviews "github.com/tektoncd/hub/api/gen/catalog/views"
 	goa "goa.design/goa/v3/pkg"
 )
-
-// RefreshRequestBody is the type of the "catalog" service "Refresh" endpoint
-// HTTP request body.
-type RefreshRequestBody struct {
-	// Name of Organization the Catalog is in
-	Org string `form:"org" json:"org" xml:"org"`
-	// Name of Catalog
-	Name string `form:"name" json:"name" xml:"name"`
-}
 
 // RefreshResponseBody is the type of the "catalog" service "Refresh" endpoint
 // HTTP response body.
@@ -47,16 +37,6 @@ type RefreshInternalErrorResponseBody struct {
 	Timeout *bool `form:"timeout,omitempty" json:"timeout,omitempty" xml:"timeout,omitempty"`
 	// Is the error a server-side fault?
 	Fault *bool `form:"fault,omitempty" json:"fault,omitempty" xml:"fault,omitempty"`
-}
-
-// NewRefreshRequestBody builds the HTTP request body from the payload of the
-// "Refresh" endpoint of the "catalog" service.
-func NewRefreshRequestBody(p *catalog.RefreshPayload) *RefreshRequestBody {
-	body := &RefreshRequestBody{
-		Org:  p.Org,
-		Name: p.Name,
-	}
-	return body
 }
 
 // NewRefreshJobOK builds a "catalog" service "Refresh" endpoint result from a
