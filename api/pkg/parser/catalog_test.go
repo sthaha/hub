@@ -7,8 +7,8 @@ import (
 
 	"github.com/tektoncd/hub/api/pkg/git"
 	"go.uber.org/zap"
-	"gotest.tools/assert"
-	"gotest.tools/assert/cmp"
+	"gotest.tools/v3/assert"
+	"gotest.tools/v3/assert/cmp"
 )
 
 type fakeRepo struct {
@@ -94,4 +94,27 @@ func TestParse_InvalidTask(t *testing.T) {
 	issue := result.Issues[0]
 	assert.Assert(t, cmp.Contains(issue.Message, "git-cli is missing mandatory version label"))
 	assert.Equal(t, Critical, issue.Type)
+}
+
+func TestParse_InvalidFilename(t *testing.T) {
+	// invalid task is ignored but result must have the issue it found
+	repo := fakeRepo{
+		path: "./testdata/catalogs/invalid-taskname",
+	}
+
+	p := ForCatalog(zap.NewNop().Sugar(), repo, "")
+	res, result := p.Parse()
+
+	assert.Equal(t, 2, len(res)) // one maven should be found and a git-clone
+
+	assert.Equal(t, 0, len(result.Errors))
+
+	assert.Equal(t, 2, len(result.Issues))
+	gitCLI := result.Issues[0]
+	assert.Assert(t, cmp.Contains(gitCLI.Message, "failed to find any resource matching"))
+	assert.Equal(t, Critical, gitCLI.Type)
+
+	gitClone := result.Issues[1]
+	assert.Assert(t, cmp.Contains(gitClone.Message, "expected to find 2 versions but found only 1"))
+	assert.Equal(t, Critical, gitClone.Type)
 }

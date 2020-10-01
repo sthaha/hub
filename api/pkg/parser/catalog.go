@@ -17,7 +17,6 @@ package parser
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -133,7 +132,16 @@ func (c CatalogParser) findResourcesByKind(kind string) ([]Resource, Result) {
 
 }
 
-var errInvalidResourceDir = errors.New("invalid resource dir")
+func dirCount(path string) int {
+	count := 0
+	dirs, _ := ioutil.ReadDir(path)
+	for _, d := range dirs {
+		if d.IsDir() {
+			count++
+		}
+	}
+	return count
+}
 
 func (c CatalogParser) parseResource(kind, kindPath string, f os.FileInfo) (*Resource, Result) {
 	// TODO(sthaha): move this to a different package that can scan a CatalogParser
@@ -154,9 +162,19 @@ func (c CatalogParser) parseResource(kind, kindPath string, f os.FileInfo) (*Res
 
 	matches, err := filepath.Glob(pattern)
 	if err != nil {
-		log.Warn(err, "failed to find resources in path %s", kindPath)
-		result.AddError(errInvalidResourceDir)
+		log.Warn(err, "failed to glob %s", pattern)
+		result.AddError(err)
 		return nil, result
+	}
+	if len(matches) == 0 {
+		log.Warn("failed to find resources in path %s", kindPath)
+		result.Critical("failed to find any resource matching %s", pattern)
+		return nil, result
+	}
+
+	if exp, got := dirCount(filepath.Join(kindPath, name)), len(matches); got != exp {
+		log.Warn("expected to find %d versions for %s/%s but found only", exp, kind, name, got)
+		result.Critical("expected to find %d versions but found only %d for %s ", exp, got, pattern)
 	}
 
 	for _, m := range matches {
@@ -220,7 +238,7 @@ func (c CatalogParser) appendVersion(res *Resource, filePath string) Result {
 
 	u := tkn.Unstructured
 
-	// manadatory checks
+	// mandatory checks
 	labels := u.GetLabels()
 	version, ok := labels[VersionLabel]
 	if !ok {
@@ -233,7 +251,7 @@ func (c CatalogParser) appendVersion(res *Resource, filePath string) Result {
 	annotations := u.GetAnnotations()
 	MinPipelinesVersion, ok := annotations[MinPipelinesVersionAnnotation]
 	if !ok {
-		issue := fmt.Sprintf("Resource %s - %s is missing manadatory minimum pipeline version annotation", tkn.GVK, tkn.Name)
+		issue := fmt.Sprintf("Resource %s - %s is missing mandatory minimum pipeline version annotation", tkn.GVK, tkn.Name)
 		log.With("action", "error").Warn(issue)
 		result.Critical(issue)
 		return result
