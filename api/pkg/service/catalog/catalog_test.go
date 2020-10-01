@@ -29,7 +29,7 @@ import (
 // NewServiceTest returns the catalog service implementation for test.
 func NewServiceTest(api app.Config) catalog.Service {
 	svc := auth.NewService(api, "catalog")
-	wq := newCatalogSyncer(api)
+	wq := newSyncer(api)
 
 	s := &service{
 		svc,
@@ -45,11 +45,11 @@ func TestRefresh(t *testing.T) {
 	catalogSvc := NewServiceTest(tc)
 	ctx := auth.WithUserID(context.Background(), 11)
 
-	payload := &catalog.RefreshPayload{Name: "catalog-official", Org: "tektoncd"}
-	res, err := catalogSvc.Refresh(ctx, payload)
+	payload := &catalog.RefreshPayload{}
+	job, err := catalogSvc.Refresh(ctx, payload)
 	assert.NoError(t, err)
-	assert.Equal(t, 10001, int(res.ID))
-	assert.Equal(t, "queued", res.Status)
+	assert.Equal(t, 10001, int(job.ID))
+	assert.Equal(t, "queued", job.Status)
 }
 
 func TestRefreshAgain(t *testing.T) {
@@ -59,7 +59,7 @@ func TestRefreshAgain(t *testing.T) {
 	catalogSvc := NewServiceTest(tc)
 	ctx := auth.WithUserID(context.Background(), 11)
 
-	payload := &catalog.RefreshPayload{Name: "catalog-official", Org: "tektoncd"}
+	payload := &catalog.RefreshPayload{}
 	res, err := catalogSvc.Refresh(ctx, payload)
 	assert.NoError(t, err)
 	assert.Equal(t, 10001, int(res.ID))

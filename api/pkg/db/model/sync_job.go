@@ -23,10 +23,10 @@ type JobState int
 
 // Represents Job State
 const (
-	Queued JobState = iota
-	Running
-	Done
-	Error
+	JobQueued JobState = iota
+	JobRunning
+	JobDone
+	JobError
 )
 
 func (s JobState) String() string {
@@ -47,5 +47,5 @@ func (j *SyncJob) SetState(s JobState) {
 }
 
 func (j *SyncJob) IsRunning() bool {
-	return j.Status == Running.String()
+	return j.Status == JobRunning.String()
 }

@@ -16,6 +16,7 @@ package catalog
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/jinzhu/gorm"
 	"github.com/tektoncd/hub/api/pkg/app"
@@ -37,8 +38,8 @@ type syncer struct {
 }
 
 var (
-	queued  = &model.SyncJob{Status: "queued"}
-	running = &model.SyncJob{Status: "running"}
+	queued  = &model.SyncJob{Status: model.JobQueued.String()}
+	running = &model.SyncJob{Status: model.JobRunning.String()}
 )
 
 func newSyncer(api app.BaseConfig) *syncer {
@@ -53,6 +54,7 @@ func newSyncer(api app.BaseConfig) *syncer {
 
 func (s *syncer) Enqueue(userID, catalogID uint) (*model.SyncJob, error) {
 
+	s.logger.Infof("Enqueueing User: %d catalogID %d", userID, catalogID)
 	queued := &model.SyncJob{CatalogID: catalogID, Status: "queued"}
 	running := &model.SyncJob{CatalogID: catalogID, Status: "running"}
 	newJob := &model.SyncJob{CatalogID: catalogID, Status: "queued", UserID: userID}
@@ -62,7 +64,7 @@ func (s *syncer) Enqueue(userID, catalogID uint) (*model.SyncJob, error) {
 	}
 	s.wakeUp()
 
-	return queued, nil
+	return newJob, nil
 }
 
 func (s *syncer) wakeUp() {
@@ -96,7 +98,10 @@ func (s *syncer) Run() {
 			case s.limit <- true:
 				go func() {
 					log.Info("processing the queue")
-					s.Process()
+					if err := s.Process(); err != nil {
+						time.AfterFunc(30*time.Second, s.Next)
+						return
+					}
 					s.Next()
 				}()
 			}
@@ -148,31 +153,31 @@ func (s *syncer) Process() error {
 		db.Model(&job).Updates(job)
 	}
 
-	if err := db.Where(queued).Order("created_at").First(&job).Error; err != nil {
-		return ignoreNotFound(err)
+	if err := db.Model(&job).Where(queued).Order("created_at").First(&job).Error; err != nil {
+		if ignoreNotFound(err) != nil {
+			log.Error(err)
+			return err
+		}
+		log.Info("nothing to sync")
+		return nil
 	}
 
-	setJobState(model.Running)
+	setJobState(model.JobRunning)
 
 	catalog := model.Catalog{}
 	db.Model(job).Related(&catalog)
 
-	fetchSpec := git.FetchSpec{
-		URL:      catalog.URL,
-		Revision: catalog.Revision,
-		Path:     clonePath,
-	}
-
+	fetchSpec := git.FetchSpec{URL: catalog.URL, Revision: catalog.Revision, Path: clonePath}
 	repo, err := s.git.Fetch(fetchSpec)
 	if err != nil {
 		log.Error(err, "clone failed")
-		setJobState(model.Queued)
-		return err
+		setJobState(model.JobError)
+		return nil
 	}
 
 	if repo.Head() == catalog.SHA {
 		log.Infof("skipping already cloned catalog - %s | sha: %s", catalog.URL, catalog.SHA)
-		setJobState(model.Done)
+		setJobState(model.JobDone)
 		return nil
 	}
 
@@ -182,8 +187,10 @@ func (s *syncer) Process() error {
 	res, result := parser.Parse()
 	if err = s.updateJob(job, repo.Head(), res, result); err != nil {
 		log.Error(err, "updation of db failed")
+		setJobState(model.JobQueued)
+		return err
 	}
-	setJobState(model.Done)
+	setJobState(model.JobDone)
 	return nil
 }
 
