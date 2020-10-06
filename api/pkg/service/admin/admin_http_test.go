@@ -46,6 +46,10 @@ const agentToken007Updated = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
 	"eyJpZCI6MzEsIm5hbWUiOiJhZ2VudC0wMDEiLCJzY29wZXMiOlsidGVzdDpyZWFkIiwiYWdlbnQ6Y3JlYXRlIl0sInR5cGUiOiJhZ2VudCJ9." +
 	"0u_SkfkJjuq8jyax8jwLdAzHUl7J0g0a6jkN9gLoJl4"
 
+const validTokenWithConfigRefreshScope = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+	"eyJpZCI6MTEsImxvZ2luIjoiZm9vIiwibmFtZSI6ImZvby1iYXIiLCJzY29wZXMiOlsicmF0aW5nOnJlYWQiLCJyYXRpbmc6d3JpdGUiLCJhZ2VudDpjcmVhdGUiLCJjb25maWc6cmVmcmVzaCJdfQ." +
+	"rvAd_0xEMHFzj3UfmbB4wNFZqEyfsEolWvgioD9gc9k"
+
 func UpdateAgentChecker(tc *testutils.TestConfig) *goahttpcheck.APIChecker {
 	service := auth.NewService(tc.APIConfig, tc.JWTSigningKey())
 	checker := goahttpcheck.New()
@@ -140,5 +144,33 @@ func TestUpdateAgent_Http_UpdateCase(t *testing.T) {
 		assert.NoError(t, marshallErr)
 
 		assert.Equal(t, agentToken007Updated, res.Token)
+	})
+}
+
+func RefreshConfigChecker(tc *testutils.TestConfig) *goahttpcheck.APIChecker {
+	checker := goahttpcheck.New()
+	checker.Mount(server.NewRefreshConfigHandler,
+		server.MountRefreshConfigHandler,
+		admin.NewRefreshConfigEndpoint(New(tc), New(tc).(admin.Auther).JWTAuth))
+	return checker
+}
+
+func TestRefreshConfig_Http(t *testing.T) {
+	tc := testutils.Setup(t)
+	testutils.LoadFixtures(t, tc.FixturePath())
+
+	RefreshConfigChecker(tc).Test(t, http.MethodPost, "/system/config/refresh").
+		WithHeader("Authorization", validTokenWithConfigRefreshScope).
+		Check().
+		HasStatus(200).Cb(func(r *http.Response) {
+		b, readErr := ioutil.ReadAll(r.Body)
+		assert.NoError(t, readErr)
+		defer r.Body.Close()
+
+		var jsonMap map[string]interface{}
+		marshallErr := json.Unmarshal([]byte(b), &jsonMap)
+		assert.NoError(t, marshallErr)
+
+		assert.Equal(t, "5d03cd8d0bfcf80e3ad42fa562d72972", jsonMap["checksum"])
 	})
 }

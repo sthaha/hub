@@ -34,6 +34,7 @@ func Migrate(api *app.APIBase) error {
 		gormigrate.DefaultOptions,
 		[]*gormigrate.Migration{
 			renameNameColumnToAgentNameInUserTable(log),
+			createConfigTableAndAddConfigRefreshScope(log),
 		},
 	)
 
@@ -49,6 +50,7 @@ func Migrate(api *app.APIBase) error {
 			&model.UserResourceRating{},
 			&model.SyncJob{},
 			&model.Scope{},
+			&model.Config{},
 		).Error; err != nil {
 			log.Error(err)
 			return err
@@ -129,6 +131,7 @@ func addScopes(log *log.Logger, db *gorm.DB) error {
 	scopes := []string{
 		"agent:create",
 		"catalog:refresh",
+		"config:refresh",
 	}
 
 	for _, s := range scopes {

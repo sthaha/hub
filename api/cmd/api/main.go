@@ -74,7 +74,9 @@ func main() {
 	// Populate Tables
 	initializer := initializer.New(context.Background(), api)
 	if err := initializer.Run(); err != nil {
-		logger.Fatalf("Failed to populate table: %v", err)
+		if err.Error() != "skip-config-refresh" {
+			logger.Fatalf("Failed to populate table: %v", err)
+		}
 	}
 
 	// Initialize the services.

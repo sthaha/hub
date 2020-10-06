@@ -35,16 +35,71 @@ func New(ctx context.Context, api app.BaseConfig) *Initializer {
 // Run executes the func which populate the tables
 func (i *Initializer) Run() error {
 
+	i.db = i.db.Begin()
+
+	// Check if config data is changed
+	var config *model.Config
+	var err error
+	if config, err = i.alreadyApplied(); err != nil {
+		return err
+	}
+
 	if err := i.addCategories(); err != nil {
+		i.db.Rollback()
 		return err
 	}
 	if err := i.addCatalogs(); err != nil {
+		i.db.Rollback()
 		return err
 	}
 	if err := i.addUsers(); err != nil {
+		i.db.Rollback()
 		return err
 	}
+
+	// Updates the config checksum
+	if config.Checksum != i.data.Checksum {
+		config.Checksum = i.data.Checksum
+		if err := i.db.Save(config).Error; err != nil {
+			i.log.Error(err)
+			return err
+		}
+	}
+
+	i.db.Commit()
 	return nil
+}
+
+func (i *Initializer) alreadyApplied() (*model.Config, error) {
+
+	db := i.db
+
+	// Checks if table exists
+	if !db.HasTable(&model.Config{}) {
+		return nil, fmt.Errorf("config table not found")
+	}
+
+	// Check if there is an entry in Config table for checksum
+	config := &model.Config{}
+	if err := db.First(&config).Error; err != nil {
+
+		// If there is no entry then create a new checksum entry
+		if gorm.IsRecordNotFoundError(err) {
+			newConfig := &model.Config{Checksum: i.data.Checksum}
+			if err := db.Create(newConfig).Error; err != nil {
+				i.log.Error(err)
+				return nil, err
+			}
+			return newConfig, nil
+		}
+		i.log.Error(err)
+		return nil, err
+	}
+	if config.Checksum == i.data.Checksum {
+		i.log.Info("SKIP: Config refresh as config file has not changed")
+		return nil, fmt.Errorf("skip-config-refresh")
+	}
+	return config, nil
 }
 
 func (i *Initializer) addCategories() error {

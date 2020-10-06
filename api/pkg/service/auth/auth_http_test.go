@@ -37,10 +37,10 @@ const validToken string = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
 	"zFztueyvZLLCyx3RD7WpzzfVaTrybzxgS5a_pDsq5M8"
 
 // Token for the user with github name "foo-bar" and github login "foo"
-// It has a extra scope "agent:create" along with default scope
+// It has a extra scopes "agent:create", "config-refresh" along with default scope
 const validTokenWithExtraScope = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
-	"eyJpZCI6MTEsImxvZ2luIjoiZm9vIiwibmFtZSI6ImZvby1iYXIiLCJzY29wZXMiOlsicmF0aW5nOnJlYWQiLCJyYXRpbmc6d3JpdGUiLCJhZ2VudDpjcmVhdGUiXX0." +
-	"bKPINZyhzX2Ls1QM--UV56cC-vm5uymT8y-DmEhY1dE"
+	"eyJpZCI6MTEsImxvZ2luIjoiZm9vIiwibmFtZSI6ImZvby1iYXIiLCJzY29wZXMiOlsicmF0aW5nOnJlYWQiLCJyYXRpbmc6d3JpdGUiLCJhZ2VudDpjcmVhdGUiLCJjb25maWc6cmVmcmVzaCJdfQ." +
+	"rvAd_0xEMHFzj3UfmbB4wNFZqEyfsEolWvgioD9gc9k"
 
 func AuthenticateChecker(tc *testutils.TestConfig) *goahttpcheck.APIChecker {
 	checker := goahttpcheck.New()
