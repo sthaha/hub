@@ -213,3 +213,8 @@ func (r *agentRequest) userExistWithAgentName(name string) error {
 
 	return admin.MakeInvalidPayload(fmt.Errorf("user exists with name: %s", name))
 }
+
+// Refresh the changes in config file
+func (s *service) RefreshConfig(ctx context.Context, p *admin.RefreshConfigPayload) (res *admin.RefreshConfigResult, err error) {
+	return
+}

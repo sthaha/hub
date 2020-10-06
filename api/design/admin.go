@@ -24,6 +24,7 @@ var _ = Service("admin", func() {
 	Error("invalid-payload", ErrorResult, "Invalid request body")
 	Error("invalid-token", ErrorResult, "Invalid User token")
 	Error("invalid-scopes", ErrorResult, "Invalid Token scopes ")
+	Error("invalid-config", ErrorResult, "Invalid Config file")
 	Error("internal-error", ErrorResult, "Internal server error")
 
 	Method("UpdateAgent", func() {
@@ -50,6 +51,32 @@ var _ = Service("admin", func() {
 			Response("invalid-payload", StatusBadRequest)
 			Response("invalid-token", StatusUnauthorized)
 			Response("invalid-scopes", StatusForbidden)
+			Response("internal-error", StatusInternalServerError)
+		})
+	})
+
+	Method("RefreshConfig", func() {
+		Description("Refresh the changes in config file")
+		Security(JWTAuth, func() {
+			Scope("config:refresh")
+		})
+		Payload(func() {
+			Token("token", String, "User JWT")
+			Required("token")
+		})
+		Result(func() {
+			Attribute("checksum", String, "Config file checksum")
+			Required("checksum")
+		})
+
+		HTTP(func() {
+			POST("/system/config/refresh")
+			Header("token:Authorization")
+
+			Response(StatusOK)
+			Response("invalid-token", StatusUnauthorized)
+			Response("invalid-scopes", StatusForbidden)
+			Response("invalid-config", StatusBadRequest)
 			Response("internal-error", StatusInternalServerError)
 		})
 	})

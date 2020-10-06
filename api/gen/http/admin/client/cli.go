@@ -23,7 +23,7 @@ func BuildUpdateAgentPayload(adminUpdateAgentBody string, adminUpdateAgentToken 
 	{
 		err = json.Unmarshal([]byte(adminUpdateAgentBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"name\": \"Ut nihil eum placeat.\",\n      \"scopes\": [\n         \"Consequuntur voluptas.\",\n         \"Enim ut rerum repellat aut.\"\n      ]\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"name\": \"Et consequuntur voluptas et enim ut rerum.\",\n      \"scopes\": [\n         \"Eos qui fugiat earum ut.\",\n         \"Est ea reiciendis pariatur quasi illo.\",\n         \"Corrupti omnis aut beatae reiciendis accusantium distinctio.\"\n      ]\n   }'")
 		}
 		if body.Scopes == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("scopes", "body"))
@@ -45,6 +45,19 @@ func BuildUpdateAgentPayload(adminUpdateAgentBody string, adminUpdateAgentToken 
 			v.Scopes[i] = val
 		}
 	}
+	v.Token = token
+
+	return v, nil
+}
+
+// BuildRefreshConfigPayload builds the payload for the admin RefreshConfig
+// endpoint from CLI flags.
+func BuildRefreshConfigPayload(adminRefreshConfigToken string) (*admin.RefreshConfigPayload, error) {
+	var token string
+	{
+		token = adminRefreshConfigToken
+	}
+	v := &admin.RefreshConfigPayload{}
 	v.Token = token
 
 	return v, nil
