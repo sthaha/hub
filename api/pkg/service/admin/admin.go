@@ -25,6 +25,7 @@ import (
 	"github.com/tektoncd/hub/api/gen/admin"
 	"github.com/tektoncd/hub/api/gen/log"
 	"github.com/tektoncd/hub/api/pkg/app"
+	"github.com/tektoncd/hub/api/pkg/db/initializer"
 	"github.com/tektoncd/hub/api/pkg/db/model"
 	"github.com/tektoncd/hub/api/pkg/service/auth"
 	"github.com/tektoncd/hub/api/pkg/token"
@@ -32,7 +33,7 @@ import (
 
 type service struct {
 	*auth.Service
-	jwtSigningKey string
+	api app.Config
 }
 
 type agentRequest struct {
@@ -41,17 +42,24 @@ type agentRequest struct {
 	jwtSigningKey string
 }
 
+type configRequest struct {
+	db  *gorm.DB
+	log *log.Logger
+	api app.Config
+}
+
 var (
 	invalidTokenError  = admin.MakeInvalidToken(fmt.Errorf("invalid user token"))
 	invalidScopesError = admin.MakeInvalidScopes(fmt.Errorf("user not authorized"))
 	internalError      = admin.MakeInternalError(fmt.Errorf("failed to create agent"))
+	refreshError       = admin.MakeInternalError(fmt.Errorf("failed to refresh config"))
 )
 
 // New returns the admin service implementation.
 func New(api app.Config) admin.Service {
 	return &service{
-		Service:       auth.NewService(api, "admin"),
-		jwtSigningKey: api.JWTSigningKey(),
+		Service: auth.NewService(api, "admin"),
+		api:     api,
 	}
 }
 
@@ -66,7 +74,7 @@ func (s *service) UpdateAgent(ctx context.Context, p *admin.UpdateAgentPayload) 
 	req := agentRequest{
 		db:            s.DB(ctx),
 		log:           s.LoggerWith(ctx, "user-id", user.ID),
-		jwtSigningKey: s.jwtSigningKey,
+		jwtSigningKey: s.api.JWTSigningKey(),
 	}
 
 	return req.run(p.Name, p.Scopes)
@@ -212,4 +220,48 @@ func (r *agentRequest) userExistWithAgentName(name string) error {
 	}
 
 	return admin.MakeInvalidPayload(fmt.Errorf("user exists with name: %s", name))
+}
+
+// Refresh the changes in config file
+func (s *service) RefreshConfig(ctx context.Context, p *admin.RefreshConfigPayload) (*admin.RefreshConfigResult, error) {
+
+	user, err := s.User(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	req := configRequest{
+		db:  s.DB(ctx),
+		log: s.LoggerWith(ctx, "user-id", user.ID),
+		api: s.api,
+	}
+
+	return req.refreshConfig(ctx, p.Force)
+}
+
+func (r *configRequest) refreshConfig(ctx context.Context, forceRefresh bool) (*admin.RefreshConfigResult, error) {
+
+	// Delete existing entry in config for checksum if force refresh is true
+	if forceRefresh {
+		if err := r.db.Unscoped().Delete(&model.Config{}).Error; err != nil {
+			r.log.Error(err)
+			return nil, internalError
+		}
+	}
+
+	// Reload data from config file
+	if err := r.api.ReloadData(); err != nil {
+		r.log.Error(err)
+		return nil, refreshError
+	}
+
+	// Run the initializer
+	initializer := initializer.New(ctx, r.api)
+	config, err := initializer.Run()
+	if err != nil {
+		r.log.Error(err)
+		return nil, refreshError
+	}
+
+	return &admin.RefreshConfigResult{Checksum: config.Checksum}, nil
 }
