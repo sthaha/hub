@@ -19,13 +19,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/jinzhu/gorm"
-	"goa.design/goa/v3/security"
-
 	"github.com/tektoncd/hub/api/gen/auth"
 	"github.com/tektoncd/hub/api/pkg/app"
 	"github.com/tektoncd/hub/api/pkg/db/model"
 	"github.com/tektoncd/hub/api/pkg/token"
+	"goa.design/goa/v3/security"
+	"gorm.io/gorm"
 )
 
 type contextKey string

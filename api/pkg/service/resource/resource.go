@@ -19,16 +19,17 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jinzhu/gorm"
-
 	"github.com/tektoncd/hub/api/gen/log"
 	"github.com/tektoncd/hub/api/gen/resource"
 	"github.com/tektoncd/hub/api/pkg/app"
 	"github.com/tektoncd/hub/api/pkg/db/model"
 	"github.com/tektoncd/hub/api/pkg/parser"
+	"gorm.io/gorm"
 )
 
 type service struct {
+	db *gorm.DB
+
 	app.Service
 }
 
@@ -47,7 +48,7 @@ var (
 
 // New returns the resource service implementation.
 func New(api app.BaseConfig) resource.Service {
-	return &service{api.Service("resource")}
+	return &service{api.DB(), api.Service("resource")}
 }
 
 // Find resources based on name, kind or both
@@ -72,7 +73,7 @@ func (s *service) Query(ctx context.Context, p *resource.QueryPayload) (res reso
 		filterByKinds(p.Kinds),
 		filterResourceName(p.Match, p.Name),
 		withResourceDetails,
-	).Limit(p.Limit)
+	).Limit(int(p.Limit))
 
 	req := request{
 		db:  q,
@@ -88,7 +89,7 @@ func (s *service) List(ctx context.Context, p *resource.ListPayload) (res resour
 	db := s.DB(ctx)
 
 	q := db.Scopes(withResourceDetails).
-		Limit(p.Limit)
+		Limit(int(p.Limit))
 
 	req := request{
 		db:  q,
@@ -373,12 +374,9 @@ func orderByVersion(db *gorm.DB) *gorm.DB {
 
 func findOne(db *gorm.DB, result interface{}) error {
 
-	err := db.Find(result).Error
+	err := db.First(result).Error
 	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
-			return notFoundError
-		}
-		return fetchError
+		return isNotFoundError(err)
 	}
 	return nil
 }
@@ -478,4 +476,11 @@ func lower(t []string) []string {
 func invalidKindError(kind string) error {
 	return resource.MakeInvalidKind(fmt.Errorf("resource kind '%s' not supported. Supported kinds are %v",
 		kind, parser.SupportedKinds()))
+}
+
+func isNotFoundError(err error) error {
+	if gorm.ErrRecordNotFound == err {
+		return notFoundError
+	}
+	return fetchError
 }

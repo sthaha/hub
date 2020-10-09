@@ -19,11 +19,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jinzhu/gorm"
 	"github.com/tektoncd/hub/api/gen/catalog"
 	"github.com/tektoncd/hub/api/pkg/app"
 	"github.com/tektoncd/hub/api/pkg/db/model"
 	"github.com/tektoncd/hub/api/pkg/service/auth"
+	"gorm.io/gorm"
 )
 
 type service struct {
@@ -50,6 +50,7 @@ func New(api app.Config) catalog.Service {
 		wq,
 	}
 	return s
+	return &service{}
 }
 
 // refresh the catalog for new resources
@@ -79,10 +80,11 @@ func (s *service) Refresh(ctx context.Context, p *catalog.RefreshPayload) (*cata
 	log.Infof("job %d queued for refresh", job.ID)
 
 	return ret, nil
+	return nil, nil
 }
 
 func notFoundOrInternalError(err error) error {
-	if gorm.IsRecordNotFoundError(err) {
+	if gorm.ErrRecordNotFound == err {
 		return notFoundError
 	}
 	return internalError

@@ -20,14 +20,13 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/go-github/github"
-	"github.com/jinzhu/gorm"
-	"golang.org/x/oauth2"
-
 	"github.com/tektoncd/hub/api/gen/auth"
 	"github.com/tektoncd/hub/api/gen/log"
 	"github.com/tektoncd/hub/api/pkg/app"
 	"github.com/tektoncd/hub/api/pkg/db/model"
 	"github.com/tektoncd/hub/api/pkg/token"
+	"golang.org/x/oauth2"
+	"gorm.io/gorm"
 )
 
 type service struct {

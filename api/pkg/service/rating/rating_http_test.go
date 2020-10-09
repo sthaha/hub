@@ -22,12 +22,12 @@ import (
 
 	"github.com/ikawaha/goahttpcheck"
 	"github.com/stretchr/testify/assert"
-	goa "goa.design/goa/v3/pkg"
-
 	"github.com/tektoncd/hub/api/gen/http/rating/server"
 	"github.com/tektoncd/hub/api/gen/rating"
+	"github.com/tektoncd/hub/api/pkg/db/model"
 	"github.com/tektoncd/hub/api/pkg/service/auth"
 	"github.com/tektoncd/hub/api/pkg/testutils"
+	goa "goa.design/goa/v3/pkg"
 )
 
 // Token for the user with github name "foo-bar" and github login "foo"
@@ -157,12 +157,36 @@ func TestUpdate_Http(t *testing.T) {
 	tc := testutils.Setup(t)
 	testutils.LoadFixtures(t, tc.FixturePath())
 
+	data := []byte(`{"rating": 5}`)
+
+	UpdateChecker(tc).Test(t, http.MethodPut, "/resource/4/rating").
+		WithHeader("Authorization", validToken).
+		WithBody(data).Check().
+		HasStatus(200)
+
+	r := &model.UserResourceRating{ResourceID: 4, UserID: 11}
+	err := tc.DB().First(r).Error
+	assert.NoError(t, err)
+
+	assert.Equal(t, uint(5), r.Rating)
+}
+
+func TestUpdate_Http_Existing(t *testing.T) {
+	tc := testutils.Setup(t)
+	testutils.LoadFixtures(t, tc.FixturePath())
+
 	data := []byte(`{"rating": 2}`)
 
 	UpdateChecker(tc).Test(t, http.MethodPut, "/resource/1/rating").
 		WithHeader("Authorization", validToken).
 		WithBody(data).Check().
 		HasStatus(200)
+
+	r := &model.UserResourceRating{ResourceID: 4, UserID: 11}
+	err := tc.DB().First(r).Error
+	assert.NoError(t, err)
+
+	assert.Equal(t, uint(2), r.Rating)
 }
 
 func TestUpdate_Http_ResourceNotFound(t *testing.T) {

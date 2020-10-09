@@ -18,7 +18,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/tektoncd/hub/api/gen/log"
 	"github.com/tektoncd/hub/api/pkg/app"
@@ -49,7 +49,7 @@ func New(ctx context.Context, api app.BaseConfig) *Initializer {
 func (i *Initializer) Run() (*model.Config, error) {
 
 	config := &model.Config{}
-	if err := i.db.Model(config).FirstOrInit(config).Error; err != nil {
+	if err := i.db.Model(config).FirstOrCreate(config).Error; err != nil {
 		i.log.Error(err)
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func (i *Initializer) addUsers(db *gorm.DB) error {
 			user := &model.User{}
 			if err := q.First(&user).Error; err != nil {
 				// If user not found then log and continue
-				if gorm.IsRecordNotFoundError(err) {
+				if gorm.ErrRecordNotFound == err {
 					i.log.Warnf("user %s not found: %s", userID, err)
 					continue
 				}

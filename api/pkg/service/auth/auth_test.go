@@ -20,10 +20,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/h2non/gock.v1"
-
 	"github.com/tektoncd/hub/api/gen/auth"
 	"github.com/tektoncd/hub/api/pkg/testutils"
+	"gopkg.in/h2non/gock.v1"
 )
 
 func TestLogin(t *testing.T) {

@@ -18,12 +18,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jinzhu/gorm"
 	"github.com/tektoncd/hub/api/pkg/app"
 	"github.com/tektoncd/hub/api/pkg/db/model"
 	"github.com/tektoncd/hub/api/pkg/git"
 	"github.com/tektoncd/hub/api/pkg/parser"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 var clonePath = "/tmp/catalog"
@@ -45,7 +45,7 @@ var (
 func newSyncer(api app.BaseConfig) *syncer {
 	logger := api.Logger("syncer")
 	return &syncer{
-		db:     app.DBWithLogger(api.DB(), logger),
+		db:     api.DB(), //app.DBWithLogger(api.DB(), logger),
 		logger: logger.SugaredLogger,
 		limit:  make(chan bool, 1),
 		stop:   make(chan bool),
@@ -86,7 +86,7 @@ func (s *syncer) Run() {
 	log.Info("running catalog syncer ....")
 
 	// all running jobs should be queued so that they can be retried
-	if err := s.db.Model(model.SyncJob{}).Where(running).Update(queued).Error; ignoreNotFound(err) != nil {
+	if err := s.db.Model(model.SyncJob{}).Where(running).Updates(queued).Error; ignoreNotFound(err) != nil {
 		log.Error(err, "failed to update running -> queued")
 	}
 
@@ -122,7 +122,7 @@ func (s *syncer) Stop() {
 func (s *syncer) Next() {
 	log := s.logger.With("action", "next")
 
-	count := 0
+	var count int64
 	if err := s.db.Model(&model.SyncJob{}).Where(queued).Count(&count).Error; err != nil {
 		log.Error(err)
 		return
@@ -136,7 +136,7 @@ func (s *syncer) Next() {
 }
 
 func ignoreNotFound(err error) error {
-	if gorm.IsRecordNotFoundError(err) {
+	if gorm.ErrRecordNotFound == err {
 		return nil
 	}
 	return err
@@ -154,7 +154,7 @@ func (s *syncer) Process() error {
 		db.Model(&job).Updates(job)
 	}
 
-	if err := db.Model(&job).Where(queued).Order("created_at").First(&job).Error; err != nil {
+	if err := db.Model(&job).Preload("Catalog").Where(queued).Order("created_at").First(&job).Error; err != nil {
 		if ignoreNotFound(err) != nil {
 			log.Error(err)
 			return err
@@ -166,7 +166,8 @@ func (s *syncer) Process() error {
 	setJobState(model.JobRunning)
 
 	catalog := model.Catalog{}
-	db.Model(job).Related(&catalog)
+	catalog = job.Catalog
+	//db.Model(job).Related(&catalog)
 
 	fetchSpec := git.FetchSpec{URL: catalog.URL, Revision: catalog.Revision, Path: clonePath}
 	repo, err := s.git.Fetch(fetchSpec)
@@ -200,8 +201,8 @@ func (s *syncer) updateJob(job model.SyncJob, sha string, res []parser.Resource,
 
 	txn := s.db.Begin()
 
-	catalog := model.Catalog{}
-	txn.Model(&job).Related(&catalog)
+	catalog := job.Catalog
+	//txn.Model(&job).Related(&catalog)
 	catalog.SHA = sha
 
 	if err := s.updateResources(txn, log, &catalog, res); err != nil {

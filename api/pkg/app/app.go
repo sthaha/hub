@@ -22,18 +22,15 @@ import (
 	"os"
 	"strings"
 
-	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
+	"github.com/tektoncd/hub/api/gen/log"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
-
-	// Blank for package side effect: loads postgres drivers
-	_ "github.com/lib/pq"
-
-	"github.com/tektoncd/hub/api/gen/log"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 // BaseConfig defines methods on APIBase
@@ -119,11 +116,11 @@ func (ab *APIBase) DB() *gorm.DB {
 }
 
 // DBWithLogger returns gorm db object initialised with logger
-func DBWithLogger(db *gorm.DB, logger *log.Logger) *gorm.DB {
-	db = db.New()
-	db.SetLogger(&gormLogger{logger})
-	return db
-}
+// func DBWithLogger(db *gorm.DB, logger *log.Logger) *gorm.DB {
+// 	db = db.New()
+// 	db.SetLogger(&gormLogger{logger})
+// 	return db
+// }
 
 // Database returns the database object used for initializing db connection
 func (ab *APIBase) Database() Database {
@@ -188,7 +185,8 @@ func (ab *APIBase) ReloadData() error {
 // Cleanup flushes any buffered log entries & closes the db connection
 func (ab *APIBase) Cleanup() {
 	ab.logger.Sync()
-	ab.db.Close()
+	db, _ := ab.db.DB()
+	db.Close()
 }
 
 // OAuthConfig returns oauth2 config object
@@ -273,7 +271,7 @@ func APIBaseFromEnvFile(file string) (*APIBase, error) {
 		log.Errorf("failed to obtain database configuration: %v", err)
 		return nil, err
 	}
-	ab.db, err = gorm.Open(DBDialect, ab.dbConf.ConnectionString())
+	ab.db, err = gorm.Open(postgres.Open(ab.dbConf.ConnectionString()), &gorm.Config{})
 	if err != nil {
 		log.Errorf("failed to establish database connection: [%s]: %s", ab.dbConf, err)
 		return nil, err

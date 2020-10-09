@@ -18,13 +18,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jinzhu/gorm"
-
 	"github.com/tektoncd/hub/api/gen/log"
 	"github.com/tektoncd/hub/api/gen/rating"
 	"github.com/tektoncd/hub/api/pkg/app"
 	"github.com/tektoncd/hub/api/pkg/db/model"
 	"github.com/tektoncd/hub/api/pkg/service/auth"
+	"gorm.io/gorm"
 )
 
 var (
@@ -92,8 +91,8 @@ func (r *request) getRating(resID uint) (*rating.GetResult, error) {
 	q := r.db.Where(&model.UserResourceRating{UserID: r.user.ID, ResourceID: resID})
 
 	userRating := model.UserResourceRating{}
-	if err := q.Find(&userRating).Error; err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+	if err := q.First(&userRating).Error; err != nil {
+		if gorm.ErrRecordNotFound == err {
 			return &rating.GetResult{Rating: -1}, nil
 		}
 		r.log.Error(err)
@@ -161,7 +160,7 @@ func (r *request) validateResourceID(id uint) (*model.Resource, error) {
 
 	res := &model.Resource{}
 	if err := r.db.First(res, id).Error; err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if gorm.ErrRecordNotFound == err {
 			return nil, notFoundError
 		}
 		r.log.Error(err)

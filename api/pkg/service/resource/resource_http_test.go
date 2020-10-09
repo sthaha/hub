@@ -23,12 +23,11 @@ import (
 
 	"github.com/ikawaha/goahttpcheck"
 	"github.com/stretchr/testify/assert"
-	goa "goa.design/goa/v3/pkg"
-	"gotest.tools/v3/golden"
-
 	"github.com/tektoncd/hub/api/gen/http/resource/server"
 	"github.com/tektoncd/hub/api/gen/resource"
 	"github.com/tektoncd/hub/api/pkg/testutils"
+	goa "goa.design/goa/v3/pkg"
+	"gotest.tools/v3/golden"
 )
 
 func QueryChecker(tc *testutils.TestConfig) *goahttpcheck.APIChecker {

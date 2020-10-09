@@ -23,12 +23,11 @@ import (
 
 	"github.com/ikawaha/goahttpcheck"
 	"github.com/stretchr/testify/assert"
-	goa "goa.design/goa/v3/pkg"
-	"gopkg.in/h2non/gock.v1"
-
 	"github.com/tektoncd/hub/api/gen/auth"
 	"github.com/tektoncd/hub/api/gen/http/auth/server"
 	"github.com/tektoncd/hub/api/pkg/testutils"
+	goa "goa.design/goa/v3/pkg"
+	"gopkg.in/h2non/gock.v1"
 )
 
 // Token for the user with github name "test-user" and github login "test"
