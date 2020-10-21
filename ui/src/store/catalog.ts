@@ -1,4 +1,5 @@
 import { Instance, types } from 'mobx-state-tree';
+import { IconName } from '../icons';
 
 export const Catalog = types
   .model({
@@ -10,6 +11,11 @@ export const Catalog = types
   .actions((self) => ({
     toggle() {
       self.selected = !self.selected;
+    },
+    icon() {
+      if (self.type === 'official') return IconName.cat;
+      else if (self.type === 'verified') return IconName.certificate;
+      else if (self.type === 'community') return IconName.user;
     }
   }));
 

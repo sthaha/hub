@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Icon Component should render icon for Category Filter 1`] = `ShallowWrapper {}`;
+
+exports[`Icon Component should render icon for Community Catalog Filter 1`] = `ShallowWrapper {}`;
+
+exports[`Icon Component should render icon for Official Catalog Filter 1`] = `ShallowWrapper {}`;
+
+exports[`Icon Component should render icon for Pipeline Kind Filter 1`] = `ShallowWrapper {}`;
+
+exports[`Icon Component should render icon for Task Kind Filter 1`] = `ShallowWrapper {}`;
+
+exports[`Icon Component should render icon for Verified Catalog Filter 1`] = `ShallowWrapper {}`;

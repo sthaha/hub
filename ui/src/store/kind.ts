@@ -1,4 +1,5 @@
 import { types, Instance } from 'mobx-state-tree';
+import { IconName } from '../icons';
 
 export const Kind = types
   .model({
@@ -8,6 +9,10 @@ export const Kind = types
   .actions((self) => ({
     toggle() {
       self.selected = !self.selected;
+    },
+    icon() {
+      if (self.name === 'Task') return IconName.build;
+      else return IconName.domain;
     }
   }));
 

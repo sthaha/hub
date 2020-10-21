@@ -7,13 +7,13 @@ Array [
     className="App"
   >
     <div
-      className="Filter"
+      className="hub-filter"
     >
       <div
         className="pf-l-grid pf-m-all-6-col-on-sm pf-m-all-4-col-on-md pf-m-all-3-col-on-lg pf-m-all-1-col-on-2xl"
       >
         <div
-          className="pf-l-grid__item pf-m-1-col pf-m-2-row Text-Header"
+          className="pf-l-grid__item pf-m-1-col pf-m-1-row hub-filter-header"
         >
           <h1
             className=""
@@ -67,7 +67,7 @@ Array [
         className="pf-l-grid"
       >
         <div
-          className="pf-l-grid__item Checkboxes"
+          className="pf-l-grid__item hub-filter-checkboxes"
         />
       </div>
     </div>
