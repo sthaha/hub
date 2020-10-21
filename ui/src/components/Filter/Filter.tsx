@@ -1,7 +1,18 @@
 import React from 'react';
 import { useObserver } from 'mobx-react';
-import { Button, Checkbox, Text, TextVariants, Grid, GridItem } from '@patternfly/react-core';
+import {
+  Button,
+  Checkbox,
+  Text,
+  TextVariants,
+  Grid,
+  GridItem,
+  Flex,
+  FlexItem
+} from '@patternfly/react-core';
 import TimesIcon from '@patternfly/react-icons/dist/js/icons/times-icon';
+import Icon from '../Icon/Icon';
+import { titleCase } from '../../utils/titlecase';
 import './Filter.css';
 
 interface Filterable {
@@ -21,11 +32,22 @@ interface FilterList {
   header: string;
 }
 
+const labelWithIcon = (filterName: string) => {
+  return (
+    <Flex>
+      <FlexItem spacer={{ default: 'spacerXs' }}>
+        <Icon filterName={filterName} iconSize="sm" />
+      </FlexItem>
+      <FlexItem>{filterName}</FlexItem>
+    </Flex>
+  );
+};
+
 const checkboxes = (items: Filterable[]) =>
   items.map((c: Filterable) => (
     <Checkbox
       key={c.id}
-      label={c.name}
+      label={labelWithIcon(titleCase(c.name))}
       isChecked={c.selected}
       onChange={() => c.toggle()}
       aria-label="controlled checkbox"
