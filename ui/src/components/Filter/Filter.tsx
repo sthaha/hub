@@ -1,18 +1,12 @@
 import React from 'react';
 import { useObserver } from 'mobx-react';
-import {
-  Button,
-  Checkbox,
-  Text,
-  TextVariants,
-  Grid,
-  GridItem,
-  Flex,
-  FlexItem
-} from '@patternfly/react-core';
-import TimesIcon from '@patternfly/react-icons/dist/js/icons/times-icon';
-import Icon from '../Icon/Icon';
+
+import { Button, Checkbox, Text, TextVariants, Grid, GridItem } from '@patternfly/react-core';
+import { IconSize, TimesIcon } from '@patternfly/react-icons';
+
+import Icon, { Icons } from '../Icon/Icon';
 import { titleCase } from '../../utils/titlecase';
+
 import './Filter.css';
 
 interface Filterable {
@@ -27,46 +21,49 @@ interface Store {
   clear(): void;
 }
 
+type iconMapper = (name: string) => Icons;
+
 interface FilterList {
   store: Store;
   header: string;
+  iconForFilter?: iconMapper;
 }
 
-const labelWithIcon = (filterName: string) => {
-  return (
-    <Flex>
-      <FlexItem spacer={{ default: 'spacerXs' }}>
-        <Icon filterName={filterName} iconSize="sm" />
-      </FlexItem>
-      <FlexItem>{filterName}</FlexItem>
-    </Flex>
-  );
-};
+const labelWithIcon = (label: string, iconFn?: iconMapper) => (
+  <Grid>
+    {iconFn && (
+      <GridItem span={2}>
+        <Icon id={iconFn(label)} size={IconSize.sm} label={label} />
+      </GridItem>
+    )}
+    <GridItem span={iconFn ? 10 : 12}>{titleCase(label)}</GridItem>
+  </Grid>
+);
 
-const checkboxes = (items: Filterable[]) =>
+const checkboxes = (items: Filterable[], iconForFilter?: iconMapper) =>
   items.map((c: Filterable) => (
     <Checkbox
       key={c.id}
-      label={labelWithIcon(titleCase(c.name))}
+      label={labelWithIcon(c.name, iconForFilter)}
       isChecked={c.selected}
       onChange={() => c.toggle()}
       aria-label="controlled checkbox"
-      id={`${c.id}`}
+      id={String(c.id)}
       name={c.name}
     />
   ));
 
-const Filter: React.FC<FilterList> = ({ store, header }) => {
+const Filter: React.FC<FilterList> = ({ store, header, iconForFilter }) => {
   return useObserver(() => (
     <div className="Filter">
       <Grid sm={6} md={4} lg={3} xl2={1}>
-        <GridItem className="Text-Header" span={1} rowSpan={2}>
+        <GridItem className="hub-filter-header" span={1} rowSpan={1}>
           <Text component={TextVariants.h1} style={{ fontWeight: 'bold' }}>
             {header}
           </Text>
         </GridItem>
 
-        <GridItem rowSpan={2}>
+        <GridItem rowSpan={1}>
           <Button variant="plain" aria-label="Clear" onClick={store.clear}>
             <TimesIcon />
           </Button>
@@ -74,7 +71,9 @@ const Filter: React.FC<FilterList> = ({ store, header }) => {
       </Grid>
 
       <Grid>
-        <GridItem className="Checkboxes">{checkboxes(store.list)}</GridItem>
+        <GridItem className="hub-filter-checkboxes">
+          {checkboxes(store.list, iconForFilter)}
+        </GridItem>
       </Grid>
     </div>
   ));
