@@ -4,7 +4,8 @@ import { useObserver } from 'mobx-react';
 import { Button, Checkbox, Text, TextVariants, Grid, GridItem } from '@patternfly/react-core';
 import { IconSize, TimesIcon } from '@patternfly/react-icons';
 
-import Icon, { Icons } from '../Icon/Icon';
+import Icon from '../Icon/Icon';
+import { IconName } from '../../icons';
 import { titleCase } from '../../utils/titlecase';
 
 import './Filter.css';
@@ -14,6 +15,7 @@ interface Filterable {
   name: string;
   selected: boolean;
   toggle(): void;
+  icon(): IconName;
 }
 
 interface Store {
@@ -21,7 +23,7 @@ interface Store {
   clear(): void;
 }
 
-type iconMapper = (name: string) => Icons;
+type iconMapper = (name: string) => IconName;
 
 interface FilterList {
   store: Store;

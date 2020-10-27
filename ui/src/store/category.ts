@@ -1,5 +1,6 @@
 import { types, getEnv, flow, Instance } from 'mobx-state-tree';
 import { Api } from '../api';
+import { IconName } from '../icons';
 
 const Tag = types.model('Tags', {
   id: types.integer,
@@ -16,6 +17,9 @@ export const Category = types
   .actions((self) => ({
     toggle() {
       self.selected = !self.selected;
+    },
+    icon() {
+      return IconName.none
     }
   }));
 
