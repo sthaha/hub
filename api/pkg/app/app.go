@@ -46,7 +46,7 @@ type BaseConfig interface {
 
 // APIBase defines the base configuration every service requires
 type APIBase struct {
-	mode   EnvMode
+	env    EnvMode
 	dbConf *Database
 	db     *gorm.DB
 	logger *log.Logger
@@ -107,7 +107,7 @@ func (db Database) ConnectionString() string {
 
 // Environment returns the EnvMode server would be running
 func (ab *APIBase) Environment() EnvMode {
-	return ab.mode
+	return ab.env
 }
 
 // DB returns gorm db object
@@ -142,6 +142,7 @@ func (ab *APIBase) Service(name string) Service {
 	return &BaseService{
 		logger: l,
 		db:     ab.DB(),
+		env:    ab,
 	}
 }
 
@@ -254,24 +255,27 @@ func APIBaseFromEnvFile(file string) (*APIBase, error) {
 	// NOTE: DO NOT move this line; viper must be initialized before reading ENV variables
 	viper.AutomaticEnv()
 
-	mode := Environment()
+	env := Environment()
 
 	var err error
 	var l *log.Logger
-	if l, err = initLogger(mode); err != nil {
+	if l, err = initLogger(env); err != nil {
 		return nil, err
 	}
 
-	ab := &APIBase{mode: mode, logger: l}
+	ab := &APIBase{env: env, logger: l}
 	log := ab.logger.With("app", "hub")
 
-	log.Infof("in %q mode ", mode)
+	log.Infof("in %q mode ", env)
 
 	if ab.dbConf, err = initDB(); err != nil {
 		log.Errorf("failed to obtain database configuration: %v", err)
 		return nil, err
 	}
-	ab.db, err = gorm.Open(postgres.Open(ab.dbConf.ConnectionString()), &gorm.Config{})
+
+	ab.db, err = gorm.Open(postgres.Open(ab.dbConf.ConnectionString()), &gorm.Config{
+		Logger: newGormLogger(env, ab.logger),
+	})
 	if err != nil {
 		log.Errorf("failed to establish database connection: [%s]: %s", ab.dbConf, err)
 		return nil, err
