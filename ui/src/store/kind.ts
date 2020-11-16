@@ -16,7 +16,7 @@ export type IKindStore = Instance<typeof KindStore>;
 
 export const KindStore = types
   .model({
-    kinds: types.map(Kind)
+    kinds: types.optional(types.map(Kind), {})
   })
 
   .actions((self) => ({

@@ -16,20 +16,20 @@ export const Root = types.model('Root', {}).views((self) => ({
   }
 }));
 
-export type IRoot = Instance<typeof Root>;
+type IRoot = Instance<typeof Root>;
 
-let RootContext: React.Context<IRoot>;
-export const useMst = () => React.useContext(RootContext);
-
-export const initRootStore = (api: Api) => {
+const initRootStore = (api: Api) => {
   const categories = CategoryStore.create({}, { api });
-  const resources = ResourceStore.create({ catalogs: {}, kinds: {} }, { api });
+  const resources = ResourceStore.create({}, { api });
   return Root.create({}, { api, categories, resources });
 };
 
 interface Props {
   children: ReactChild | ReactChildren;
 }
+
+let RootContext: React.Context<IRoot>;
+export const useMst = () => React.useContext(RootContext);
 
 export const createProviderAndStore = (api?: Api) => {
   const root = initRootStore(api || new Hub());

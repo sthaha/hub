@@ -7,6 +7,12 @@ import { CategoryStore } from './category';
 const TESTDATA_DIR = `${__dirname}/testdata`;
 const api = new FakeHub(TESTDATA_DIR);
 
+function assert(value: unknown): asserts value {
+  if (value === undefined) {
+    throw new Error('value must be defined');
+  }
+}
+
 describe('Store Object', () => {
   it('can create a resource object', () => {
     const store = Resource.create({
@@ -32,7 +38,7 @@ describe('Store functions', () => {
       },
       {
         api,
-        categoryStore: CategoryStore.create({}, { api })
+        categories: CategoryStore.create({}, { api })
       }
     );
 
@@ -41,12 +47,8 @@ describe('Store functions', () => {
     when(
       () => !store.isLoading,
       () => {
-        expect(store.isLoading).toBe(false);
-
         expect(store.resources.size).toBe(6);
-
         expect(getSnapshot(store.resources)).toMatchSnapshot();
-
         done();
       }
     );
@@ -60,7 +62,7 @@ describe('Store functions', () => {
       },
       {
         api,
-        categoryStore: CategoryStore.create({}, { api })
+        categories: CategoryStore.create({}, { api })
       }
     );
     expect(store.isLoading).toBe(true);
@@ -68,12 +70,8 @@ describe('Store functions', () => {
     when(
       () => !store.isLoading,
       () => {
-        expect(store.isLoading).toBe(false);
-
         expect(store.resources.size).toBe(6);
-
         expect(getSnapshot(store.catalogs)).toMatchSnapshot();
-
         done();
       }
     );
@@ -87,7 +85,7 @@ describe('Store functions', () => {
       },
       {
         api,
-        categoryStore: CategoryStore.create({}, { api })
+        categories: CategoryStore.create({}, { api })
       }
     );
 
@@ -96,11 +94,8 @@ describe('Store functions', () => {
     when(
       () => !store.isLoading,
       () => {
-        expect(store.isLoading).toBe(false);
         expect(store.resources.size).toBe(6);
-
         expect(getSnapshot(store.kinds)).toMatchSnapshot();
-
         done();
       }
     );
@@ -114,7 +109,7 @@ describe('Store functions', () => {
       },
       {
         api,
-        categoryStore: CategoryStore.create({}, { api })
+        categories: CategoryStore.create({}, { api })
       }
     );
     expect(store.isLoading).toBe(true);
@@ -122,14 +117,17 @@ describe('Store functions', () => {
     when(
       () => !store.isLoading,
       () => {
-        expect(store.isLoading).toBe(false);
         expect(store.resources.size).toBe(6);
+        const { catalogs } = store.catalogs;
 
-        store.catalogs.catalogs.get('2')?.toggle();
+        const random = catalogs.get('2');
+        assert(random);
+        random.toggle();
 
-        expect(store.filteredResources.length).toBe(1);
-        expect(store.filteredResources[0].name).toBe('hub');
-        expect(store.filteredResources[0].catalog.name).toBe('tekton-hub');
+        const filtered = store.filteredResources;
+        expect(filtered.length).toBe(1);
+        expect(filtered[0].name).toBe('hub');
+        expect(filtered[0].catalog.name).toBe('tekton-hub');
 
         done();
       }
@@ -144,7 +142,7 @@ describe('Store functions', () => {
       },
       {
         api,
-        categoryStore: CategoryStore.create({}, { api })
+        categories: CategoryStore.create({}, { api })
       }
     );
     expect(store.isLoading).toBe(true);
@@ -155,7 +153,9 @@ describe('Store functions', () => {
         expect(store.isLoading).toBe(false);
         expect(store.resources.size).toBe(6);
 
-        store.kinds.kinds.get('Pipeline')?.toggle();
+        const pipeline = store.kinds.kinds.get('Pipeline');
+        assert(pipeline);
+        pipeline.toggle();
 
         expect(store.filteredResources.length).toBe(1);
         expect(store.filteredResources[0].name).toBe('hub');
@@ -174,7 +174,7 @@ describe('Store functions', () => {
       },
       {
         api,
-        categoryStore: CategoryStore.create({}, { api })
+        categories: CategoryStore.create({}, { api })
       }
     );
     expect(store.isLoading).toBe(true);
@@ -206,7 +206,7 @@ describe('Store functions', () => {
       },
       {
         api,
-        categoryStore: CategoryStore.create({}, { api })
+        categories: CategoryStore.create({}, { api })
       }
     );
 
@@ -215,8 +215,6 @@ describe('Store functions', () => {
     when(
       () => !store.isLoading,
       () => {
-        expect(store.isLoading).toBe(false);
-
         const item = Resource.create({
           id: 44,
           name: 'golang-build',
@@ -247,7 +245,7 @@ describe('Store functions', () => {
       },
       {
         api,
-        categoryStore: CategoryStore.create({}, { api })
+        categories: CategoryStore.create({}, { api })
       }
     );
     expect(store.isLoading).toBe(true);
@@ -256,7 +254,6 @@ describe('Store functions', () => {
       () => {
         expect(store.isLoading).toBe(false);
         expect(store.resources.size).toBe(6);
-
         expect(typeof store.versions.get('1')?.updatedAt.fromNow()).toBe('string');
 
         done();

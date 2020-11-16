@@ -26,7 +26,7 @@ export const updatedAt = types.custom<string, Moment>({
   }
 });
 
-const Version = types.model('VersionInfo', {
+const Version = types.model('Version', {
   id: types.identifierNumber,
   version: types.string,
   displayName: types.string,
@@ -50,15 +50,14 @@ export const Resource = types.model('Resource', {
 });
 
 export type IResource = Instance<typeof Resource>;
-export type IResourceStore = Instance<typeof ResourceStore>;
-export type IVersionInfo = Instance<typeof Version>;
+export type IVersion = Instance<typeof Version>;
 
 export const ResourceStore = types
   .model('ResourceStore', {
     resources: types.map(Resource),
-    catalogs: CatalogStore,
-    kinds: KindStore,
     versions: types.map(Version),
+    catalogs: types.optional(CatalogStore, {}),
+    kinds: types.optional(KindStore, {}),
     search: '',
     err: '',
     isLoading: true
@@ -70,8 +69,8 @@ export const ResourceStore = types
     get api(): Api {
       return getEnv(self).api;
     },
-    get categoryStore(): ICategoryStore {
-      return getEnv(self).categoryStore;
+    get categories(): ICategoryStore {
+      return getEnv(self).categories;
     }
   }))
 
@@ -95,10 +94,8 @@ export const ResourceStore = types
         const { api } = self;
         const json = yield api.resources();
 
-        const kind: string[] = json.data.map((r: IResource) => r.kind);
-        kind.forEach((k: string) => {
-          self.kinds.add(k);
-        });
+        const kinds: string[] = json.data.map((r: IResource) => r.kind);
+        kinds.forEach((k) => self.kinds.add(k));
 
         json.data.forEach((r: IResource) => {
           self.catalogs.add(r.catalog);
@@ -136,28 +133,27 @@ export const ResourceStore = types
 
   .views((self) => ({
     get filteredResources() {
-      const { resources, search } = self;
-      const filtered: IResource[] = [];
+      const { resources, kinds, catalogs, categories, search } = self;
+      const { selectedTags } = categories;
 
+      const filtered: IResource[] = [];
       resources.forEach((r: IResource) => {
-        if (
-          (self.kinds.selected.size > 0 ? self.kinds.selected.has(r.kind.name) : true) &&
-          (self.catalogs.selected.size > 0 ? self.catalogs.selected.has(r.catalog.id) : true) &&
-          (self.categoryStore.selectedTags.size > 0
-            ? r.tags.some((t: ITag) => {
-                return self.categoryStore.selectedTags.has(t.id);
-              })
-            : true)
-        )
+        const matchesKind = kinds.selected.size === 0 || kinds.selected.has(r.kind.name);
+        const matchesCatalogs = catalogs.selected.size === 0 || catalogs.selected.has(r.catalog.id);
+        const matchesTags = selectedTags.size === 0 || r.tags.some((t) => selectedTags.has(t.id));
+
+        if (matchesKind && matchesCatalogs && matchesTags) {
           filtered.push(r);
+        }
       });
-      if (search !== '') {
+
+      if (search.trim() !== '') {
         return fuzzysort
-          .go(search, filtered, {
-            keys: ['name', 'displayName']
-          })
+          .go(search, filtered, { keys: ['name', 'displayName'] })
           .map((resource: Fuzzysort.KeysResult<IResource>) => resource.obj);
       }
       return filtered;
     }
   }));
+
+export type IResourceStore = Instance<typeof ResourceStore>;
