@@ -8,14 +8,14 @@ import Icon from '../Icon/Icon';
 import { titleCase } from '../../utils/titlecase';
 
 import './Filter.css';
-import { IconName } from '../../icons';
+import Icons from '../../common/icons';
 
 interface Filterable {
   id: number;
   name: string;
   selected: boolean;
   toggle(): void;
-  icon(): IconName;
+  icon?: Icons;
 }
 
 interface Store {
@@ -23,21 +23,19 @@ interface Store {
   clearSelected(): void;
 }
 
-export type iconMapper = (name: string) => IconName;
-
 interface Props {
   store: Store;
   header: string;
 }
 
-const labelWithIcon = (label: string, iconFn?: iconMapper) => (
+const labelWithIcon = (label: string, icon?: Icons) => (
   <Grid>
-    {iconFn && (
+    {icon && (
       <GridItem span={2}>
-        <Icon id={iconFn(label)} size={IconSize.sm} label={label} />
+        <Icon id={icon} size={IconSize.sm} label={label} />
       </GridItem>
     )}
-    <GridItem span={iconFn ? 10 : 12}>{titleCase(label)}</GridItem>
+    <GridItem span={icon ? 10 : 12}>{titleCase(label)}</GridItem>
   </Grid>
 );
 

@@ -1,6 +1,5 @@
 import { types, getEnv, flow, Instance } from 'mobx-state-tree';
 import { Api } from '../api';
-import { IconName } from '../icons';
 
 export const Tag = types.model('Tags', {
   id: types.identifierNumber,

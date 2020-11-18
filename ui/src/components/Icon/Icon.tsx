@@ -8,27 +8,29 @@ import {
   IconSize
 } from '@patternfly/react-icons';
 
-import { IconName } from '../../icons';
+import Icons from '../../common/icons';
 import './Icon.css';
 
-export interface IconProps {
-  id: IconName | keyof IconName;
+interface Props {
+  id: Icons | keyof Icons;
   size: IconSize | keyof typeof IconSize;
   label: string;
 }
 
-const Icon: React.FC<IconProps> = (props: IconProps) => {
+const Icon: React.FC<Props> = (props: Props) => {
   const { id, size, label } = props;
   switch (id) {
-    case IconName.cat:
+    case Icons.Unknown:
+      return <div></div>;
+    case Icons.Cat:
       return <CatIcon size={size} className="hub-icon" label={label} />;
-    case IconName.certificate:
+    case Icons.Certificate:
       return <CertificateIcon size={size} className="hub-icon" label={label} />;
-    case IconName.user:
+    case Icons.User:
       return <UserIcon size={size} className="hub-icon" label={label} />;
-    case IconName.build:
+    case Icons.Build:
       return <BuildIcon size={size} className="hub-icon" label={label} />;
-    case IconName.domain:
+    case Icons.Domain:
       return <DomainIcon size={size} className="hub-icon" label={label} />;
   }
   return <div></div>;
